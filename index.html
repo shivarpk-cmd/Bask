@@ -54,7 +54,7 @@ body.locked .wrap{display:none}
 .atabs button{flex:1}
 .atabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .afld{margin-bottom:10px}.afld label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
-.afld[hidden]{display:none}
+.afld[hidden],.ashow[hidden]{display:none}
 .ashow{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0 0 10px}
 .auth input[type=checkbox]{width:auto}
 .aerr{color:var(--neg);font-size:13px;min-height:18px;margin-bottom:8px}
@@ -69,16 +69,17 @@ body.locked .wrap{display:none}
 <div class="atabs"><button type="button" id="atl" class="on">Log in</button><button type="button" id="atc">Create account</button></div>
 <div class="afld"><label for="aem">Email<span style="color:var(--neg)"> *</span></label><input id="aem" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com"></div>
 <div class="afld" id="acph" hidden><label for="aph">Ph (10-digit phone number)<span style="color:var(--neg)"> *</span></label><input id="aph" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10-digit phone number"></div>
-<div class="afld"><label for="apw">Password<span style="color:var(--neg)"> *</span></label><input id="apw" type="password" autocomplete="current-password" placeholder="Password"></div>
+<div class="afld" id="afpw"><label for="apw">Password<span style="color:var(--neg)"> *</span></label><input id="apw" type="password" autocomplete="current-password" placeholder="Password"></div>
 <div class="afld" id="acw" hidden><label for="apc">Confirm password<span style="color:var(--neg)"> *</span></label><input id="apc" type="password" autocomplete="new-password" placeholder="Re-enter password"></div>
-<label class="ashow"><input type="checkbox" id="ashow"> Show password</label>
+<label class="ashow" id="ashl"><input type="checkbox" id="ashow"> Show password</label>
+<div class="note" id="afg" style="margin:0 0 10px"><a href="#" id="afl" style="color:var(--accent)">Forgot password?</a></div>
 <div class="aerr" id="aerr" role="alert"></div>
 <button type="button" class="p" id="ago" style="width:100%">Log in</button>
 <div class="note"><span style="color:var(--neg)">*</span> Mandatory field. Accounts are saved in this browser on this device only. Passwords are stored as a salted hash, never in plain text.</div>
 </div>
 </div>
 <div class="wrap">
-<div class="hd"><h1>Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="uem"></span><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
+<div class="hd"><h1>Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="uem"></span><button type="button" id="cpb" hidden>Change password</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
 <p class="sub">Add your stocks once in the Stocks tab, then log trades by picking a stock. Actual points = PNL ÷ Qty. Compare against TradingView points.</p>
 
 <div class="tabs" id="tabs"></div>
@@ -539,25 +540,57 @@ function overview(){
 }
 function adminView(){
   const A=window.BPAuth,U=A.rd(),me=window.BP_EMAIL,isSuper=!!(U[me]&&U[me].super),el=$('p4');
+  let RQ=[];try{RQ=JSON.parse(localStorage.getItem('bp_resets')||'[]')}catch(e){}
   const keys=Object.keys(U).sort((a,b)=>(U[b].role==='admin')-(U[a].role==='admin')||a.localeCompare(b));
   const rows=keys.map(k=>{const u=U[k],ad=u.role==='admin';
-    const act=u.super?'<span class="note">Main admin</span>':ad?(isSuper?`<button data-adm="demote" data-em="${esc(k)}">Remove admin</button>`:''):`<button class="p" data-adm="promote" data-em="${esc(k)}">Make admin</button>`;
-    return `<tr><td>${esc(k)}</td><td>${esc(u.phone||'\u2014')}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('');
-  el.innerHTML=`<div class="card"><h2>Create admin</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px"><div><div class="note" style="margin:0 0 4px">Email <span class="neg">*</span></div><input id="ae" type="email" autocomplete="off" placeholder="admin@example.com"></div><div><div class="note" style="margin:0 0 4px">Ph (10 digits) <span class="neg">*</span></div><input id="ap" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="10-digit phone number"></div><div><div class="note" style="margin:0 0 4px">Password <span class="neg">*</span></div><input id="aw" type="password" autocomplete="new-password" placeholder="Min 8 characters"></div></div><div class="bar"><button class="p" id="acr">Create admin</button></div><div class="note" id="amsg"></div></div><div class="card"><h2>All accounts</h2><div class="scroll"><table style="min-width:520px"><thead><tr><th>Email</th><th>Ph</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Use Make admin to give an existing user the Admin role. Only the main admin can remove admin access.</div></div>`;
-  const msg=(t,ok)=>{const m=$('amsg');m.textContent=t;m.style.color=ok?'var(--pos)':'var(--neg)'};
+    const act=u.super?'<span class="note">Main admin</span>':ad?(isSuper?`<button data-adm="demote" data-em="${esc(k)}">Remove admin</button>`:''):`<button class="p" data-adm="promote" data-em="${esc(k)}">Make admin</button> <button data-adm="rlink" data-em="${esc(k)}">Reset link</button>`;
+    return `<tr><td>${esc(k)}</td><td>${esc(u.phone||'—')}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('');
+  const rq=RQ.length?RQ.map(x=>`<tr><td>${esc(x.email)}</td><td>${esc(new Date(x.ts).toLocaleString('en-IN'))}</td><td><button class="p" data-adm="rlink" data-em="${esc(x.email)}">Create link</button> <button data-adm="rdel" data-em="${esc(x.email)}">Dismiss</button></td></tr>`).join(''):'<tr><td colspan="3" style="text-align:center;color:var(--muted)">No reset requests</td></tr>';
+  const fld=(l,id,t,ph,x)=>`<div><div class="note" style="margin:0 0 4px">${l} <span class="neg">*</span></div><input id="${id}" type="${t}" ${x||''} autocomplete="off" placeholder="${ph}"></div>`;
+  const grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px';
+  el.innerHTML=`<div class="card"><h2>Create user</h2><div style="${grid}">${fld('Email','ae','email','user@example.com')}${fld('Ph (10 digits)','ap','text','10-digit phone number','inputmode="numeric" maxlength="10"')}${fld('Password','aw','password','Min 8 characters')}</div><div class="bar"><button class="p" id="acr">Create user</button></div><div class="note" id="amsg"></div></div>`+
+  `<div class="card"><h2>Password reset requests</h2><div class="scroll"><table style="min-width:420px"><thead><tr><th>Email</th><th>Requested</th><th></th></tr></thead><tbody>${rq}</tbody></table></div><div style="${grid};margin-top:12px">${fld('Create reset link for email','re','email','user@example.com')}</div><div class="bar"><button class="p" id="rgo">Create reset link</button></div><div class="note" id="rmsg"></div><div id="rres"></div><div class="note">The link is valid for 24 hours and works once. Copy it and send it to the user yourself (WhatsApp, SMS or email). It resets the password of a User account in the browser where the user opens it. Admin passwords cannot be reset this way. Requests only appear here when made in this same browser.</div></div>`+
+  (`<div class="card"><h2>Change my password</h2><div style="${grid}">${fld('Current password','cp0','password','Current password')}${fld('New password','cp1','password','Min 8 characters')}${fld('Confirm new password','cp2','password','Re-enter new password')}</div><div class="bar"><button class="p" id="cpg">Change password</button></div><div class="note" id="cpm"></div></div>`)+
+  `<div class="card"><h2>All accounts</h2><div class="scroll"><table style="min-width:520px"><thead><tr><th>Email</th><th>Ph</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Use Make admin to give an existing user the Admin role. Only the main admin can remove admin access.</div></div>`;
+  const msg=(id,t,ok)=>{const m=$(id);m.textContent=t;m.style.color=ok?'var(--pos)':'var(--neg)'};
   $('ap').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)};
   $('acr').onclick=async()=>{
     const em=$('ae').value.trim().toLowerCase(),ph=$('ap').value.trim(),pw=$('aw').value,U2=A.rd();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg('Enter a valid email address.');
-    if(!/^\d{10}$/.test(ph))return msg('Phone number is required and must be exactly 10 digits.');
-    if(pw.length<8)return msg('Password must be at least 8 characters.');
-    if(U2[em])return msg('An account with this email already exists. Use Make admin in the list below.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg('amsg','Enter a valid email address.');
+    if(!/^\d{10}$/.test(ph))return msg('amsg','Phone number is required and must be exactly 10 digits.');
+    if(pw.length<8)return msg('amsg','Password must be at least 8 characters.');
+    if(U2[em])return msg('amsg','An account with this email already exists. Use Make admin in All accounts to give admin access.');
     const salt=crypto.getRandomValues(new Uint8Array(16));
-    U2[em]={salt:A.b64(salt),hash:await A.hashPw(pw,salt),created:Date.now(),role:'admin',phone:ph};A.wr(U2);
-    adminView();$('amsg').textContent='Admin account created for '+em+'.';$('amsg').style.color='var(--pos)';
+    U2[em]={salt:A.b64(salt),hash:await A.hashPw(pw,salt),created:Date.now(),role:'user',phone:ph};A.wr(U2);
+    adminView();msg('amsg','User account created for '+em+'. Use Make admin in All accounts to give admin access.',true);
+  };
+  async function mkLink(em){
+    em=(em||'').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg('rmsg','Enter a valid email address.');
+    const u=A.rd()[em];if(u&&(u.role==='admin'||u.super))return msg('rmsg','Admin accounts cannot be reset with a link.');
+    const exp=Date.now()+864e5,sig=await A.signReset(em,exp);
+    const link=location.href.split('#')[0]+'#reset='+encodeURIComponent(em)+'&exp='+exp+'&sig='+sig;
+    msg('rmsg','Reset link for '+em+' (valid 24 hours):',true);
+    $('rres').innerHTML=`<div class="bar"><input id="rlk" readonly style="flex:1;min-width:240px" value="${esc(link)}"><button class="p" id="rcp">Copy link</button></div>`;
+    $('rlk').onfocus=e=>e.target.select();
+    $('rcp').onclick=async()=>{const i=$('rlk');i.select();try{await navigator.clipboard.writeText(i.value);$('rcp').textContent='Copied'}catch(e){document.execCommand&&document.execCommand('copy');$('rcp').textContent='Copied'}};
+  }
+  $('rgo').onclick=()=>mkLink($('re').value);
+  if($('cpg'))$('cpg').onclick=async()=>{
+    const U2=A.rd(),u=U2[me],c=$('cp0').value,n1=$('cp1').value,n2=$('cp2').value;
+    if(!u)return;
+    if(!c||!n1||!n2)return msg('cpm','Fill in all three password fields.');
+    if(await A.hashPw(c,Uint8Array.from(atob(u.salt),x=>x.charCodeAt(0)))!==u.hash)return msg('cpm','Current password is incorrect.');
+    if(n1.length<8)return msg('cpm','New password must be at least 8 characters.');
+    if(n1!==n2)return msg('cpm','New passwords do not match.');
+    if(n1===c)return msg('cpm','New password must be different from the current one.');
+    const salt=crypto.getRandomValues(new Uint8Array(16));u.salt=A.b64(salt);u.hash=await A.hashPw(n1,salt);A.wr(U2);
+    $('cp0').value=$('cp1').value=$('cp2').value='';msg('cpm','Password changed.',true);
   };
   el.onclick=e=>{
     const a=e.target.dataset.adm,em=e.target.dataset.em;if(!a)return;
+    if(a==='rlink'){mkLink(em);return}
+    if(a==='rdel'){try{localStorage.setItem('bp_resets',JSON.stringify(RQ.filter(x=>x.email!==em)))}catch(x){}adminView();return}
     const U2=A.rd();if(!U2[em]||U2[em].super)return;
     if(a==='promote')U2[em].role='admin';
     else if(a==='demote'&&isSuper)U2[em].role='user';else return;
@@ -977,7 +1010,7 @@ try{const t=localStorage.getItem('bptheme');if(t==='light'||t==='dark')document.
 const rd=()=>{try{return JSON.parse(localStorage.getItem(UK)||'{}')||{}}catch(e){return{}}};
 const wr=u=>localStorage.setItem(UK,JSON.stringify(u));
 const SUPER='indexreturns@gmail.com';
-(function(){const u=rd();u[SUPER]={salt:'w86sls9jQypPQ7Hyz3jXKQ==',hash:'HcfoxK318mJdXeQCSAN4vlxGLnaXP/gego3+utXRFnM=',created:(u[SUPER]&&u[SUPER].created)||Date.now(),role:'admin',phone:(u[SUPER]&&u[SUPER].phone)||'',super:true};wr(u)})();
+(function(){const u=rd();if(!u[SUPER])u[SUPER]={salt:'w86sls9jQypPQ7Hyz3jXKQ==',hash:'HcfoxK318mJdXeQCSAN4vlxGLnaXP/gego3+utXRFnM=',created:Date.now(),role:'admin',phone:''};u[SUPER].role='admin';u[SUPER].super=true;wr(u)})();
 const enc=new TextEncoder();
 const b64=b=>btoa(String.fromCharCode.apply(null,new Uint8Array(b)));
 const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
@@ -985,15 +1018,40 @@ async function hashPw(pw,salt){
   const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
   return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,256));
 }
-window.BPAuth={rd,wr,hashPw,b64};
+async function signReset(email,exp){const k=await crypto.subtle.importKey('raw',enc.encode('e81e8de3e2fba039df53493d570b55f19a033185e1694283'),{name:'HMAC',hash:'SHA-256'},false,['sign']);const sg=await crypto.subtle.sign('HMAC',k,enc.encode(email+'|'+exp));return b64(sg).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+window.BPAuth={rd,wr,hashPw,b64,signReset};
 let mode='login',fails=0,lockUntil=0;
 function setMode(m){
-  mode=m;const c=m==='create';
-  $('atl').classList.toggle('on',!c);$('atc').classList.toggle('on',c);
-  $('acw').hidden=!c;$('acph').hidden=!c;$('ago').textContent=c?'Create account':'Log in';
-  $('asub').textContent=c?'Create your account':'Log in to your account';
-  $('apw').autocomplete=c?'new-password':'current-password';
+  mode=m;const c=m==='create',lg=m==='login',fg=m==='forgot',rs=m==='reset';
+  $('atl').classList.toggle('on',lg);$('atc').classList.toggle('on',c);
+  $('acw').hidden=!(c||rs);$('acph').hidden=!c;$('afpw').hidden=fg;$('ashl').hidden=fg;$('afg').hidden=!lg;
+  $('ago').textContent=c?'Create account':fg?'Send reset request':rs?'Set new password':'Log in';
+  $('asub').textContent=c?'Create your account':fg?'Enter your email to request a password reset':rs?'Choose a new password':'Log in to your account';
+  $('apw').autocomplete=(c||rs)?'new-password':'current-password';
+  $('aem').readOnly=rs;
+  const pl=document.querySelector('label[for=apw]').firstChild;if(pl)pl.textContent=rs?'New password':'Password';
   $('aerr').textContent='';$('aerr').style.color='';
+}
+function leaveReset(){if(mode==='reset'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}$('aem').value=''}}
+async function doReset(email,pw){
+  const err=$('aerr');const q=new URLSearchParams(location.hash.slice(1));
+  const exp=+q.get('exp'),sig=q.get('sig'),em=(q.get('reset')||'').toLowerCase();
+  if(!em||em!==email||!exp||!sig){err.textContent='This reset link is invalid.';return}
+  if(Date.now()>exp){err.textContent='This reset link has expired. Ask your admin for a new one.';return}
+  if(sig!==await signReset(em,exp)){err.textContent='This reset link is invalid.';return}
+  let used=[];try{used=JSON.parse(localStorage.getItem('bp_usedreset')||'[]')}catch(e){}
+  if(used.indexOf(sig)>=0){err.textContent='This reset link has already been used.';return}
+  const users=rd(),u=users[em];
+  if(!u){err.textContent='No account was found for this email in this browser.';return}
+  if(u.role==='admin'||u.super){err.textContent='Admin passwords cannot be reset with a link.';return}
+  if(pw.length<8){err.textContent='Password must be at least 8 characters.';return}
+  if(pw!==$('apc').value){err.textContent='Passwords do not match.';return}
+  const salt=crypto.getRandomValues(new Uint8Array(16));u.salt=b64(salt);u.hash=await hashPw(pw,salt);wr(users);
+  used.push(sig);try{localStorage.setItem('bp_usedreset',JSON.stringify(used.slice(-50)))}catch(e){}
+  try{const R=JSON.parse(localStorage.getItem('bp_resets')||'[]').filter(x=>x.email!==em);localStorage.setItem('bp_resets',JSON.stringify(R))}catch(e){}
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  $('apw').value='';$('apc').value='';$('aem').value=em;
+  setMode('login');err.style.color='var(--pos)';err.textContent='Password updated. Please log in.';
 }
 function start(email,role){
   role=role==='user'?'user':'admin';
@@ -1005,6 +1063,10 @@ function start(email,role){
   $('uem').textContent=email+' ('+(role==='admin'?'Admin':'User')+')';
   $('lgo').onclick=()=>{try{localStorage.removeItem(SK)}catch(e){}location.reload()};
   const sc=document.createElement('script');sc.textContent=$('appsrc').textContent;document.body.appendChild(sc);
+  if(role==='admin'){
+    $('cpb').hidden=false;
+    $('cpb').onclick=()=>{tab('admins');setTimeout(()=>{const c=document.getElementById('cp0');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.focus()}},50)};
+  }
   if(role==='user'){
     ['paste','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.stopImmediatePropagation();e.preventDefault()},true));
     const root=$('app'),fix=()=>root.querySelectorAll('input,select,button').forEach(el=>{if(el.dataset.pg)return;el.disabled=true});
@@ -1017,6 +1079,10 @@ async function submit(){
   if(!window.crypto||!crypto.subtle){err.textContent='This browser cannot run secure sign-in here. Open the page over https.';return}
   if(Date.now()<lockUntil){err.textContent='Too many attempts. Wait '+Math.ceil((lockUntil-Date.now())/1000)+' seconds and try again.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){err.textContent='Enter a valid email address.';return}
+  if(mode==='forgot'){
+    try{const R=JSON.parse(localStorage.getItem('bp_resets')||'[]');if(!R.some(x=>x.email===email)){R.push({email:email,ts:Date.now()});localStorage.setItem('bp_resets',JSON.stringify(R))}}catch(e){}
+    err.style.color='var(--pos)';err.textContent='Request sent. Your admin will send you a password reset link.';return}
+  if(mode==='reset'){await doReset(email,pw);return}
   if(!pw){err.textContent='Password is required.';return}
   const users=rd();
   $('ago').disabled=true;
@@ -1052,14 +1118,19 @@ async function submit(){
   }catch(e){err.textContent='Something went wrong. Please try again.'}
   finally{$('ago').disabled=false}
 }
-$('atl').onclick=()=>setMode('login');
-$('atc').onclick=()=>setMode('create');
+$('atl').onclick=()=>{leaveReset();setMode('login')};
+$('afl').onclick=e=>{e.preventDefault();setMode('forgot')};
+$('atc').onclick=()=>{leaveReset();setMode('create')};
 $('ago').onclick=submit;
 $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
 $('ashow').onchange=e=>{const t=e.target.checked?'text':'password';$('apw').type=t;$('apc').type=t};
 ['aem','aph','apw','apc'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit()}}));
 let cur=null;try{cur=localStorage.getItem(SK)}catch(e){}
-if(cur&&rd()[cur]){start(cur,rd()[cur].role==='admin'?'admin':'user')}
+if(location.hash.indexOf('#reset=')===0){
+  $('auth').hidden=false;setMode('reset');
+  try{$('aem').value=(new URLSearchParams(location.hash.slice(1)).get('reset')||'').toLowerCase()}catch(e){}
+}
+else if(cur&&rd()[cur]){start(cur,rd()[cur].role==='admin'?'admin':'user')}
 else{
   // no account yet: open on Create account
   $('auth').hidden=false;setMode(Object.keys(rd()).length?'login':'create');
