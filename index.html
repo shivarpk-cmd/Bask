@@ -72,7 +72,6 @@ body.locked .wrap{display:none}
 <div class="afld" id="afpw"><label for="apw">Password<span style="color:var(--neg)"> *</span></label><input id="apw" type="password" autocomplete="current-password" placeholder="Password"></div>
 <div class="afld" id="acw" hidden><label for="apc">Confirm password<span style="color:var(--neg)"> *</span></label><input id="apc" type="password" autocomplete="new-password" placeholder="Re-enter password"></div>
 <label class="ashow" id="ashl"><input type="checkbox" id="ashow"> Show password</label>
-<div class="note" id="afg" style="margin:0 0 10px"><a href="#" id="afl" style="color:var(--accent)">Forgot password?</a></div>
 <div class="aerr" id="aerr" role="alert"></div>
 <button type="button" class="p" id="ago" style="width:100%">Log in</button>
 <div class="note"><span style="color:var(--neg)">*</span> Mandatory field. Accounts are saved in this browser on this device only. Passwords are stored as a salted hash, never in plain text.</div>
@@ -1026,7 +1025,7 @@ let mode='login',fails=0,lockUntil=0;
 function setMode(m){
   mode=m;const c=m==='create',lg=m==='login',fg=m==='forgot',rs=m==='reset';
   $('atl').classList.toggle('on',lg);$('atc').classList.toggle('on',c);
-  $('acw').hidden=!(c||rs);$('acph').hidden=!c;$('afpw').hidden=fg;$('ashl').hidden=fg;$('afg').hidden=!lg;
+  $('acw').hidden=!(c||rs);$('acph').hidden=!c;$('afpw').hidden=fg;$('ashl').hidden=fg;
   $('ago').textContent=c?'Create account':fg?'Send reset request':rs?'Set new password':'Log in';
   $('asub').textContent=c?'Create your account':fg?'Enter your email to request a password reset':rs?'Choose a new password':'Log in to your account';
   $('apw').autocomplete=(c||rs)?'new-password':'current-password';
@@ -1133,7 +1132,6 @@ async function submit(){
   finally{$('ago').disabled=false}
 }
 $('atl').onclick=()=>{leaveReset();setMode('login')};
-$('afl').onclick=e=>{e.preventDefault();setMode('forgot')};
 $('atc').onclick=()=>{leaveReset();setMode('create')};
 $('ago').onclick=submit;
 $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
