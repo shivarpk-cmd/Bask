@@ -71,7 +71,6 @@ body.locked .wrap{display:none}
 <div class="afld" id="acph" hidden><label for="aph">Ph (10-digit phone number)<span style="color:var(--neg)"> *</span></label><input id="aph" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10-digit phone number"></div>
 <div class="afld"><label for="apw">Password<span style="color:var(--neg)"> *</span></label><input id="apw" type="password" autocomplete="current-password" placeholder="Password"></div>
 <div class="afld" id="acw" hidden><label for="apc">Confirm password<span style="color:var(--neg)"> *</span></label><input id="apc" type="password" autocomplete="new-password" placeholder="Re-enter password"></div>
-<div class="afld" id="arf"><label for="arole">Role</label><select id="arole" style="width:100%"><option value="user">User</option><option value="admin">Admin</option></select></div>
 <label class="ashow"><input type="checkbox" id="ashow"> Show password</label>
 <div class="aerr" id="aerr" role="alert"></div>
 <button type="button" class="p" id="ago" style="width:100%">Log in</button>
@@ -129,6 +128,7 @@ body.locked .wrap{display:none}
 </div>
 
 <div id="p3" hidden></div>
+<div id="p4" hidden></div>
 <div id="p2" hidden>
 <div class="card" id="addcard">
 <h2>Add stock</h2>
@@ -453,12 +453,13 @@ ryRender();
 let cur=0;
 function renderTabs(){
   $('tabs').innerHTML=`<button data-t="0" class="${cur===0?'on':''}">Overview</button><button data-t="1" class="${cur===1?'on':''}">Trades</button><button data-t="2" class="${cur===2?'on':''}">Stocks</button>`+S.master.map(m=>`<button data-t="${m.id}" class="${cur===m.id?'on':''}">${esc(m.name||'(unnamed)')}</button>`).join('');
+  if(window.BP_ROLE==='admin')$('tabs').insertAdjacentHTML('beforeend',`<button data-t="admins" class="${cur==='admins'?'on':''}">Admins</button>`);
   rangeInfo();
 }
 $('tabs').onclick=e=>{const t=e.target.dataset.t;if(t)tab(t==='0'?0:t==='1'?1:t==='2'?2:t)};
 function tab(t){
-  cur=t;$('p0').hidden=t!==0;$('p1').hidden=t!==1;$('p2').hidden=t!==2;$('p3').hidden=typeof t!=='string';
-  if(t===0)overview();else if(t===1)build();else if(t===2)buildM();else stockView(t);
+  cur=t;$('p0').hidden=t!==0;$('p1').hidden=t!==1;$('p2').hidden=t!==2;$('p3').hidden=typeof t!=='string'||t==='admins';$('p4').hidden=t!=='admins';
+  if(t===0)overview();else if(t===1)build();else if(t===2)buildM();else if(t==='admins'&&window.BP_ROLE==='admin')adminView();else stockView(t);
   renderTabs();
 }
 const stat=(l,v,c)=>`<div class="stat"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`;
@@ -535,6 +536,33 @@ function overview(){
     chart('PNL by stock (Actual vs TV) (\u20b9)','bars',[{v:St.map(s=>s.pa),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.p:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     chart('Points by stock (Actual vs TV)','bars',[{v:St.map(s=>s.a),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.t:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     `</div><div class="card" style="margin-top:16px"><h2>Stock-wise performance</h2><div class="scroll"><table style="min-width:900px"><thead><tr><th>Stock</th><th>Trades</th><th>Win rate</th><th>Capital (\u20b9)</th><th>PNL (\u20b9)</th><th>ROI %</th><th>Actual pts</th><th>TV pts</th><th>Diff pts</th><th>Max drawdown</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">All PNL figures are based on TV PNL. Capital (stock-wise) = the stock\u2019s Inv as set on the Stocks tab, counted once regardless of number of trades. ROI = PNL \u00f7 that capital. Max drawdown is the largest fall of cumulative PNL from its previous peak. Profit factor = gross profit \u00f7 gross loss. Diff pts = Actual \u2212 TV for profit trades and TV \u2212 Actual for loss trades.</div></div>`;
+}
+function adminView(){
+  const A=window.BPAuth,U=A.rd(),me=window.BP_EMAIL,isSuper=!!(U[me]&&U[me].super),el=$('p4');
+  const keys=Object.keys(U).sort((a,b)=>(U[b].role==='admin')-(U[a].role==='admin')||a.localeCompare(b));
+  const rows=keys.map(k=>{const u=U[k],ad=u.role==='admin';
+    const act=u.super?'<span class="note">Main admin</span>':ad?(isSuper?`<button data-adm="demote" data-em="${esc(k)}">Remove admin</button>`:''):`<button class="p" data-adm="promote" data-em="${esc(k)}">Make admin</button>`;
+    return `<tr><td>${esc(k)}</td><td>${esc(u.phone||'\u2014')}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('');
+  el.innerHTML=`<div class="card"><h2>Create admin</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px"><div><div class="note" style="margin:0 0 4px">Email <span class="neg">*</span></div><input id="ae" type="email" autocomplete="off" placeholder="admin@example.com"></div><div><div class="note" style="margin:0 0 4px">Ph (10 digits) <span class="neg">*</span></div><input id="ap" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="10-digit phone number"></div><div><div class="note" style="margin:0 0 4px">Password <span class="neg">*</span></div><input id="aw" type="password" autocomplete="new-password" placeholder="Min 8 characters"></div></div><div class="bar"><button class="p" id="acr">Create admin</button></div><div class="note" id="amsg"></div></div><div class="card"><h2>All accounts</h2><div class="scroll"><table style="min-width:520px"><thead><tr><th>Email</th><th>Ph</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Use Make admin to give an existing user the Admin role. Only the main admin can remove admin access.</div></div>`;
+  const msg=(t,ok)=>{const m=$('amsg');m.textContent=t;m.style.color=ok?'var(--pos)':'var(--neg)'};
+  $('ap').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)};
+  $('acr').onclick=async()=>{
+    const em=$('ae').value.trim().toLowerCase(),ph=$('ap').value.trim(),pw=$('aw').value,U2=A.rd();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg('Enter a valid email address.');
+    if(!/^\d{10}$/.test(ph))return msg('Phone number is required and must be exactly 10 digits.');
+    if(pw.length<8)return msg('Password must be at least 8 characters.');
+    if(U2[em])return msg('An account with this email already exists. Use Make admin in the list below.');
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    U2[em]={salt:A.b64(salt),hash:await A.hashPw(pw,salt),created:Date.now(),role:'admin',phone:ph};A.wr(U2);
+    adminView();$('amsg').textContent='Admin account created for '+em+'.';$('amsg').style.color='var(--pos)';
+  };
+  el.onclick=e=>{
+    const a=e.target.dataset.adm,em=e.target.dataset.em;if(!a)return;
+    const U2=A.rd();if(!U2[em]||U2[em].super)return;
+    if(a==='promote')U2[em].role='admin';
+    else if(a==='demote'&&isSuper)U2[em].role='user';else return;
+    A.wr(U2);adminView();
+  };
 }
 function stockView(id){
   const m=mget(id),q=n(m.qty),iv=Math.abs(n(m.inv)),el=$('p3');
@@ -948,6 +976,8 @@ const $=id=>document.getElementById(id);
 try{const t=localStorage.getItem('bptheme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
 const rd=()=>{try{return JSON.parse(localStorage.getItem(UK)||'{}')||{}}catch(e){return{}}};
 const wr=u=>localStorage.setItem(UK,JSON.stringify(u));
+const SUPER='indexreturns@gmail.com';
+(function(){const u=rd();u[SUPER]={salt:'w86sls9jQypPQ7Hyz3jXKQ==',hash:'HcfoxK318mJdXeQCSAN4vlxGLnaXP/gego3+utXRFnM=',created:(u[SUPER]&&u[SUPER].created)||Date.now(),role:'admin',phone:(u[SUPER]&&u[SUPER].phone)||'',super:true};wr(u)})();
 const enc=new TextEncoder();
 const b64=b=>btoa(String.fromCharCode.apply(null,new Uint8Array(b)));
 const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
@@ -955,19 +985,20 @@ async function hashPw(pw,salt){
   const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
   return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,256));
 }
+window.BPAuth={rd,wr,hashPw,b64};
 let mode='login',fails=0,lockUntil=0;
 function setMode(m){
   mode=m;const c=m==='create';
   $('atl').classList.toggle('on',!c);$('atc').classList.toggle('on',c);
-  $('acw').hidden=!c;$('arf').hidden=c;$('acph').hidden=!c;$('ago').textContent=c?'Create account':'Log in';
+  $('acw').hidden=!c;$('acph').hidden=!c;$('ago').textContent=c?'Create account':'Log in';
   $('asub').textContent=c?'Create your account':'Log in to your account';
   $('apw').autocomplete=c?'new-password':'current-password';
   $('aerr').textContent='';$('aerr').style.color='';
 }
 function start(email,role){
   role=role==='user'?'user':'admin';
-  window.BP_ROLE=role;window.BP_KEY='basketpnl:shared';
-  try{if(role==='admin'&&!localStorage.getItem('basketpnl:shared')){const src=localStorage.getItem('basketpnl:'+email)||localStorage.getItem('basketpnl');if(src)localStorage.setItem('basketpnl:shared',src)}}catch(e){}
+  window.BP_ROLE=role;window.BP_EMAIL=email;window.BP_KEY='basketpnl:shared';
+  try{if(role==='admin'&&!localStorage.getItem('basketpnl:shared')){let src=localStorage.getItem('basketpnl:'+email)||localStorage.getItem('basketpnl');if(!src){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('basketpnl:')===0&&k!=='basketpnl:shared'&&k.indexOf('basketpnl:view')<0){src=localStorage.getItem(k);if(src)break}}}if(src)localStorage.setItem('basketpnl:shared',src)}}catch(e){}
   if(role==='user')document.body.classList.add('ro');
   try{localStorage.setItem(SK,email)}catch(e){}
   $('auth').hidden=true;document.body.classList.remove('locked');
@@ -1015,8 +1046,7 @@ async function submit(){
         fails++;if(fails>=5){lockUntil=Date.now()+30000;fails=0}
         err.textContent='Incorrect email or password.';return;
       }
-      const ur=u.role||'admin';
-      if($('arole').value!==ur){err.textContent='This account is a '+(ur==='admin'?'Admin':'User')+' account. Select "'+(ur==='admin'?'Admin':'User')+'" as the role to log in.';return}
+      const ur=u.role==='admin'?'admin':'user';
       fails=0;start(email,ur);
     }
   }catch(e){err.textContent='Something went wrong. Please try again.'}
@@ -1029,7 +1059,7 @@ $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/
 $('ashow').onchange=e=>{const t=e.target.checked?'text':'password';$('apw').type=t;$('apc').type=t};
 ['aem','aph','apw','apc'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit()}}));
 let cur=null;try{cur=localStorage.getItem(SK)}catch(e){}
-if(cur&&rd()[cur]){start(cur,rd()[cur].role||'admin')}
+if(cur&&rd()[cur]){start(cur,rd()[cur].role==='admin'?'admin':'user')}
 else{
   // no account yet: open on Create account
   $('auth').hidden=false;setMode(Object.keys(rd()).length?'login':'create');
