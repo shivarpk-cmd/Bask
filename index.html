@@ -58,6 +58,7 @@ body.locked .wrap{display:none}
 .ashow{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0 0 10px}
 .auth input[type=checkbox]{width:auto}
 .aerr{color:var(--neg);font-size:13px;min-height:18px;margin-bottom:8px}
+button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:var(--muted)}button.cpy:hover{color:var(--accent);border-color:var(--accent)}
 #bpload[hidden]{display:none!important}#ubar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}#ubar button{padding:4px 12px}body.ro .x,body.ro #add,body.ro #upl,body.ro #clr,body.ro #hclr,body.ro #addcard,body.ro #pend{display:none!important}body.ro #app input:disabled,body.ro #app select:disabled{opacity:1;cursor:default}
 </style>
 </head>
@@ -548,7 +549,8 @@ async function adminView(){
   const U=r.data||[];
   const rows=U.map(u=>{const ad=u.role==='admin',me=u.id===A.uid;
     const act=me?'<span class="note">You</span>':ad?`<button data-adm="demote" data-id="${esc(u.id)}">Remove admin</button>`:`<button class="p" data-adm="promote" data-id="${esc(u.id)}">Make admin</button>`;
-    return `<tr><td>${esc(u.email)}</td><td>${esc(u.phone||'—')}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted)">No accounts</td></tr>';
+    const cb=v=>v?`<button type="button" class="cpy" data-cp="${esc(v)}" aria-label="Copy" title="Copy">⧉</button>`:'';
+    return `<tr><td>${esc(u.email)} ${cb(u.email)}</td><td>${esc(u.phone||'—')} ${cb(u.phone)}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted)">No accounts</td></tr>';
   const fld=(l,id,t,ph)=>`<div><div class="note" style="margin:0 0 4px">${l} <span class="neg">*</span></div><input id="${id}" type="${t}" autocomplete="off" placeholder="${ph}"></div>`;
   const grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px';
   el.innerHTML=`<div class="card"><h2>Change my password</h2><div style="${grid}">${fld('New password','cp1','password','Min 8 characters')}${fld('Confirm new password','cp2','password','Re-enter new password')}</div><div class="bar"><button class="p" id="cpg">Change password</button></div><div class="note" id="cpm"></div></div>`+
@@ -564,6 +566,13 @@ async function adminView(){
     $('cp1').value=$('cp2').value='';msg('cpm','Password changed.',true);
   };
   el.onclick=async e=>{
+    const cp=e.target.closest('[data-cp]');
+    if(cp){
+      const v=cp.dataset.cp,ok=()=>{const o=cp.textContent;cp.textContent='✓';cp.style.color='var(--pos)';setTimeout(()=>{cp.textContent=o;cp.style.color=''},1200)};
+      try{await navigator.clipboard.writeText(v);ok()}
+      catch(x){const t=document.createElement('textarea');t.value=v;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();try{document.execCommand('copy');ok()}catch(y){}t.remove()}
+      return;
+    }
     const a=e.target.dataset.adm,id=e.target.dataset.id;if(!a||id===A.uid)return;
     const x=await sb.from('profiles').update({role:a==='promote'?'admin':'user'}).eq('id',id);
     if(x.error){alert(x.error.message);return}
