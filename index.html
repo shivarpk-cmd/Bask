@@ -75,7 +75,8 @@ body.locked .wrap{display:none}
 <div class="note" id="afg" style="margin:0 0 10px"><a href="#" id="afl" style="color:var(--accent)">Forgot password?</a></div>
 <div class="aerr" id="aerr" role="alert"></div>
 <button type="button" class="p" id="ago" style="width:100%">Log in</button>
-<div class="note"><span style="color:var(--neg)">*</span> Mandatory field. Accounts are saved in this browser on this device only. Passwords are stored as a salted hash, never in plain text.</div>
+<div class="note"><span style="color:var(--neg)">*</span> Mandatory field.</div>
+<div class="note" id="acfg" hidden style="color:var(--neg)">Firebase is not set up yet. Open index.html, fill in FIREBASE_CONFIG, and see SETUP.md.</div>
 </div>
 </div>
 <div class="wrap">
@@ -155,13 +156,16 @@ body.locked .wrap{display:none}
 </div>
 
 <div id="tip"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script type="text/plain" id="appsrc">
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 let S={rows:[],master:null};
-try{const x=JSON.parse(localStorage.getItem(window.BP_KEY||'basketpnl')||'null');if(x&&Array.isArray(x.rows))S=x}catch(e){}
+try{const x=JSON.parse(window.BP_INIT||'null');if(x&&Array.isArray(x.rows))S=x}catch(e){}
 const uid=()=>Math.random().toString(36).slice(2,9);
 S.rows.forEach(r=>{if(!r.sign){const v=parseFloat(r.pnl);r.sign=v<0?'-':'+';if(!isNaN(v))r.pnl=String(Math.abs(v))}});
 if(!Array.isArray(S.master)){
@@ -175,7 +179,7 @@ if(!Array.isArray(S.master)){
 }
 delete S.inv;
 if(!Array.isArray(S.hist))S.hist=[];
-const save=()=>{if(window.BP_ROLE==='user')return;try{localStorage.setItem(window.BP_KEY||'basketpnl',JSON.stringify(S))}catch(e){}};
+const save=()=>{if(window.BP_ROLE!=='admin'||window.BP_NOSAVE)return;try{window.BP_SAVE&&window.BP_SAVE(JSON.stringify(S))}catch(e){}};
 const n=v=>v===''||v==null||isNaN(+v)?0:+v;
 const f=v=>v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const cls=v=>v>0?'pos':v<0?'neg':'';
@@ -538,63 +542,66 @@ function overview(){
     chart('Points by stock (Actual vs TV)','bars',[{v:St.map(s=>s.a),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.t:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     `</div><div class="card" style="margin-top:16px"><h2>Stock-wise performance</h2><div class="scroll"><table style="min-width:900px"><thead><tr><th>Stock</th><th>Trades</th><th>Win rate</th><th>Capital (\u20b9)</th><th>PNL (\u20b9)</th><th>ROI %</th><th>Actual pts</th><th>TV pts</th><th>Diff pts</th><th>Max drawdown</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">All PNL figures are based on TV PNL. Capital (stock-wise) = the stock\u2019s Inv as set on the Stocks tab, counted once regardless of number of trades. ROI = PNL \u00f7 that capital. Max drawdown is the largest fall of cumulative PNL from its previous peak. Profit factor = gross profit \u00f7 gross loss. Diff pts = Actual \u2212 TV for profit trades and TV \u2212 Actual for loss trades.</div></div>`;
 }
-function adminView(){
-  const A=window.BPAuth,U=A.rd(),me=window.BP_EMAIL,isSuper=!!(U[me]&&U[me].super),el=$('p4');
-  let RQ=[];try{RQ=JSON.parse(localStorage.getItem('bp_resets')||'[]')}catch(e){}
-  const keys=Object.keys(U).sort((a,b)=>(U[b].role==='admin')-(U[a].role==='admin')||a.localeCompare(b));
-  const rows=keys.map(k=>{const u=U[k],ad=u.role==='admin';
-    const act=u.super?'<span class="note">Main admin</span>':ad?(isSuper?`<button data-adm="demote" data-em="${esc(k)}">Remove admin</button>`:''):`<button class="p" data-adm="promote" data-em="${esc(k)}">Make admin</button> <button data-adm="rlink" data-em="${esc(k)}">Reset link</button>`;
-    return `<tr><td>${esc(k)}</td><td>${esc(u.phone||'—')}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('');
-  const rq=RQ.length?RQ.map(x=>`<tr><td>${esc(x.email)}</td><td>${esc(new Date(x.ts).toLocaleString('en-IN'))}</td><td><button class="p" data-adm="rlink" data-em="${esc(x.email)}">Create link</button> <button data-adm="rdel" data-em="${esc(x.email)}">Dismiss</button></td></tr>`).join(''):'<tr><td colspan="3" style="text-align:center;color:var(--muted)">No reset requests</td></tr>';
+async function adminView(){
+  const el=$('p4'),db=window.BP_DB,me=(window.BP_EMAIL||'').toLowerCase(),isSuper=!!window.BP_SUPER,fe=window.BP_ERR;
+  el.innerHTML='<div class="card"><div class="note">Loading accounts…</div></div>';
+  let L=[];
+  try{const q=await db.collection('users').get();q.forEach(d=>L.push(Object.assign({uid:d.id},d.data())))}
+  catch(e){el.innerHTML='<div class="card"><div class="note" style="color:var(--neg)">Could not load accounts. Check that the Firestore rules from SETUP.md are published.</div></div>';return}
+  if($('p4').hidden)return;
+  const SUP='indexreturns@gmail.com';
+  L.sort((a,b)=>((b.role==='admin')-(a.role==='admin'))||String(a.email).localeCompare(String(b.email)));
+  const rows=L.map(u=>{const ad=u.role==='admin',sup=String(u.email).toLowerCase()===SUP;
+    let act='';
+    if(sup)act='<span class="note">Main admin</span>';
+    else if(ad)act=(isSuper?`<button data-adm="demote" data-uid="${esc(u.uid)}">Remove admin</button> `:'');
+    else act=`<button class="p" data-adm="promote" data-uid="${esc(u.uid)}">Make admin</button> `;
+    act+=`<button data-adm="rmail" data-em="${esc(u.email)}">Send reset email</button>`;
+    return `<tr><td>${esc(u.email)}</td><td>${esc(u.phone||'—')}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted)">No accounts yet</td></tr>';
   const fld=(l,id,t,ph,x)=>`<div><div class="note" style="margin:0 0 4px">${l} <span class="neg">*</span></div><input id="${id}" type="${t}" ${x||''} autocomplete="off" placeholder="${ph}"></div>`;
   const grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px';
   el.innerHTML=`<div class="card"><h2>Create user</h2><div style="${grid}">${fld('Email','ae','email','user@example.com')}${fld('Ph (10 digits)','ap','text','10-digit phone number','inputmode="numeric" maxlength="10"')}${fld('Password','aw','password','Min 8 characters')}</div><div class="bar"><button class="p" id="acr">Create user</button></div><div class="note" id="amsg"></div></div>`+
-  `<div class="card"><h2>Password reset requests</h2><div class="scroll"><table style="min-width:420px"><thead><tr><th>Email</th><th>Requested</th><th></th></tr></thead><tbody>${rq}</tbody></table></div><div style="${grid};margin-top:12px">${fld('Create reset link for email','re','email','user@example.com')}</div><div class="bar"><button class="p" id="rgo">Create reset link</button></div><div class="note" id="rmsg"></div><div id="rres"></div><div class="note">The link is valid for 24 hours and works once. Copy it and send it to the user yourself (WhatsApp, SMS or email). It resets the password of a User account in the browser where the user opens it. Admin passwords cannot be reset this way. Requests only appear here when made in this same browser.</div></div>`+
-  (`<div class="card"><h2>Change my password</h2><div style="${grid}">${fld('Current password','cp0','password','Current password')}${fld('New password','cp1','password','Min 8 characters')}${fld('Confirm new password','cp2','password','Re-enter new password')}</div><div class="bar"><button class="p" id="cpg">Change password</button></div><div class="note" id="cpm"></div></div>`)+
-  `<div class="card"><h2>All accounts</h2><div class="scroll"><table style="min-width:520px"><thead><tr><th>Email</th><th>Ph</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Use Make admin to give an existing user the Admin role. Only the main admin can remove admin access.</div></div>`;
-  const msg=(id,t,ok)=>{const m=$(id);m.textContent=t;m.style.color=ok?'var(--pos)':'var(--neg)'};
+  `<div class="card"><h2>Change my password</h2><div style="${grid}">${fld('Current password','cp0','password','Current password')}${fld('New password','cp1','password','Min 8 characters')}${fld('Confirm new password','cp2','password','Re-enter new password')}</div><div class="bar"><button class="p" id="cpg">Change password</button></div><div class="note" id="cpm"></div></div>`+
+  `<div class="card"><h2>All accounts</h2><div class="scroll"><table style="min-width:620px"><thead><tr><th>Email</th><th>Ph</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="note" id="lmsg"></div><div class="note">Make admin gives an existing user the Admin role. Only the main admin can remove admin access. Send reset email emails the user a link to choose a new password.</div></div>`;
+  const msg=(id,t,ok)=>{const m=$(id);if(!m)return;m.textContent=t;m.style.color=ok?'var(--pos)':'var(--neg)'};
   $('ap').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)};
   $('acr').onclick=async()=>{
-    const em=$('ae').value.trim().toLowerCase(),ph=$('ap').value.trim(),pw=$('aw').value,U2=A.rd();
+    const em=$('ae').value.trim().toLowerCase(),ph=$('ap').value.trim(),pw=$('aw').value;
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg('amsg','Enter a valid email address.');
     if(!/^\d{10}$/.test(ph))return msg('amsg','Phone number is required and must be exactly 10 digits.');
     if(pw.length<8)return msg('amsg','Password must be at least 8 characters.');
-    if(U2[em])return msg('amsg','An account with this email already exists. Use Make admin in All accounts to give admin access.');
-    const salt=crypto.getRandomValues(new Uint8Array(16));
-    U2[em]={salt:A.b64(salt),hash:await A.hashPw(pw,salt),created:Date.now(),role:'user',phone:ph};A.wr(U2);
-    adminView();msg('amsg','User account created for '+em+'. Use Make admin in All accounts to give admin access.',true);
+    $('acr').disabled=true;
+    try{
+      const app2=firebase.apps.find(a=>a.name==='secondary')||firebase.initializeApp(window.BP_CFG,'secondary');
+      const cred=await app2.auth().createUserWithEmailAndPassword(em,pw);
+      await db.doc('users/'+cred.user.uid).set({email:em,phone:ph,role:'user',created:Date.now()});
+      await app2.auth().signOut();
+      await adminView();msg('amsg','User account created for '+em+'. Use Make admin below to give admin access.',true);
+    }catch(e){msg('amsg',fe(e));$('acr').disabled=false}
   };
-  async function mkLink(em){
-    em=(em||'').trim().toLowerCase();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg('rmsg','Enter a valid email address.');
-    const u=A.rd()[em];if(u&&(u.role==='admin'||u.super))return msg('rmsg','Admin accounts cannot be reset with a link.');
-    const exp=Date.now()+864e5,sig=await A.signReset(em,exp);
-    const link=location.href.split('#')[0]+'#reset='+encodeURIComponent(em)+'&exp='+exp+'&sig='+sig;
-    msg('rmsg','Reset link for '+em+' (valid 24 hours):',true);
-    $('rres').innerHTML=`<div class="bar"><input id="rlk" readonly style="flex:1;min-width:240px" value="${esc(link)}"><button class="p" id="rcp">Copy link</button></div>`;
-    $('rlk').onfocus=e=>e.target.select();
-    $('rcp').onclick=async()=>{const i=$('rlk');i.select();try{await navigator.clipboard.writeText(i.value);$('rcp').textContent='Copied'}catch(e){document.execCommand&&document.execCommand('copy');$('rcp').textContent='Copied'}};
-  }
-  $('rgo').onclick=()=>mkLink($('re').value);
-  if($('cpg'))$('cpg').onclick=async()=>{
-    const U2=A.rd(),u=U2[me],c=$('cp0').value,n1=$('cp1').value,n2=$('cp2').value;
-    if(!u)return;
+  $('cpg').onclick=async()=>{
+    const c=$('cp0').value,n1=$('cp1').value,n2=$('cp2').value,fu=window.BP_AUTH.currentUser;
     if(!c||!n1||!n2)return msg('cpm','Fill in all three password fields.');
-    if(await A.hashPw(c,Uint8Array.from(atob(u.salt),x=>x.charCodeAt(0)))!==u.hash)return msg('cpm','Current password is incorrect.');
     if(n1.length<8)return msg('cpm','New password must be at least 8 characters.');
     if(n1!==n2)return msg('cpm','New passwords do not match.');
     if(n1===c)return msg('cpm','New password must be different from the current one.');
-    const salt=crypto.getRandomValues(new Uint8Array(16));u.salt=A.b64(salt);u.hash=await A.hashPw(n1,salt);A.wr(U2);
-    $('cp0').value=$('cp1').value=$('cp2').value='';msg('cpm','Password changed.',true);
+    $('cpg').disabled=true;
+    try{
+      await fu.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(fu.email,c));
+      await fu.updatePassword(n1);
+      $('cp0').value=$('cp1').value=$('cp2').value='';msg('cpm','Password changed.',true);
+    }catch(e){msg('cpm',(e&&(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'))?'Current password is incorrect.':fe(e))}
+    finally{$('cpg').disabled=false}
   };
-  el.onclick=e=>{
-    const a=e.target.dataset.adm,em=e.target.dataset.em;if(!a)return;
-    if(a==='rlink'){mkLink(em);return}
-    if(a==='rdel'){try{localStorage.setItem('bp_resets',JSON.stringify(RQ.filter(x=>x.email!==em)))}catch(x){}adminView();return}
-    const U2=A.rd();if(!U2[em]||U2[em].super)return;
-    if(a==='promote')U2[em].role='admin';
-    else if(a==='demote'&&isSuper)U2[em].role='user';else return;
-    A.wr(U2);adminView();
+  el.onclick=async e=>{
+    const a=e.target.dataset.adm;if(!a)return;
+    const uid=e.target.dataset.uid,em=e.target.dataset.em;
+    try{
+      if(a==='rmail'){await window.BP_AUTH.sendPasswordResetEmail(em);msg('lmsg','Password reset email sent to '+em+'.',true);return}
+      if(a==='promote')await db.doc('users/'+uid).update({role:'admin'});
+      else if(a==='demote'&&isSuper)await db.doc('users/'+uid).update({role:'user'});else return;
+      await adminView();
+    }catch(err){msg('lmsg',fe(err))}
   };
 }
 function stockView(id){
@@ -996,6 +1003,7 @@ const tip=$('tip');
   tip.style.display='block';
   tip.style.left=Math.max(4,Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8))+'px';tip.style.top=(e.clientY+14)+'px';
 }));
+window.BP_APPLY=function(j){try{const x=JSON.parse(j);if(!x||!Array.isArray(x.rows))return;window.BP_NOSAVE=true;S=x;if(!Array.isArray(S.master))S.master=[];if(!Array.isArray(S.hist))S.hist=[];buildM();build();tab(cur)}catch(e){}finally{window.BP_NOSAVE=false}};
 view();
 buildM();
 build();
@@ -1004,138 +1012,130 @@ if(!VS)fit();
 </script>
 <script>
 (function(){
-const UK='bp_users',SK='bp_session';
+/* ================= FIREBASE SETUP =================
+   Paste your Firebase web-app config here (see SETUP.md). */
+const FIREBASE_CONFIG={apiKey:'',authDomain:'',projectId:'',storageBucket:'',messagingSenderId:'',appId:''};
+/* ================================================== */
+const SUPER='indexreturns@gmail.com';
 const $=id=>document.getElementById(id);
 try{const t=localStorage.getItem('bptheme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
-const rd=()=>{try{return JSON.parse(localStorage.getItem(UK)||'{}')||{}}catch(e){return{}}};
-const wr=u=>localStorage.setItem(UK,JSON.stringify(u));
-const SUPER='indexreturns@gmail.com';
-(function(){const u=rd();if(!u[SUPER])u[SUPER]={salt:'w86sls9jQypPQ7Hyz3jXKQ==',hash:'HcfoxK318mJdXeQCSAN4vlxGLnaXP/gego3+utXRFnM=',created:Date.now(),role:'admin',phone:''};u[SUPER].role='admin';u[SUPER].super=true;wr(u)})();
-const enc=new TextEncoder();
-const b64=b=>btoa(String.fromCharCode.apply(null,new Uint8Array(b)));
-const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
-async function hashPw(pw,salt){
-  const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
-  return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,256));
+let auth=null,db=null,ready=false;
+try{if(FIREBASE_CONFIG.apiKey&&window.firebase){firebase.initializeApp(FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();ready=true}}catch(e){}
+window.BP_CFG=FIREBASE_CONFIG;
+function fbErr(e){
+  const c=(e&&e.code)||'';
+  if(c==='auth/email-already-in-use')return 'An account with this email already exists.';
+  if(c==='auth/invalid-email')return 'Enter a valid email address.';
+  if(c==='auth/weak-password')return 'Password must be at least 8 characters.';
+  if(c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found'||c==='auth/invalid-login-credentials')return 'Incorrect email or password.';
+  if(c==='auth/too-many-requests')return 'Too many attempts. Please wait a few minutes and try again.';
+  if(c==='auth/network-request-failed')return 'Network error. Check your internet connection.';
+  if(c==='auth/operation-not-allowed')return 'Email/Password sign-in is not enabled in Firebase (see SETUP.md).';
+  if(c==='permission-denied')return 'Not allowed. Check the Firestore rules from SETUP.md.';
+  return 'Something went wrong. Please try again.'+(c?' ('+c+')':'');
 }
-async function signReset(email,exp){const k=await crypto.subtle.importKey('raw',enc.encode('e81e8de3e2fba039df53493d570b55f19a033185e1694283'),{name:'HMAC',hash:'SHA-256'},false,['sign']);const sg=await crypto.subtle.sign('HMAC',k,enc.encode(email+'|'+exp));return b64(sg).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-window.BPAuth={rd,wr,hashPw,b64,signReset};
-let mode='login',fails=0,lockUntil=0;
+window.BP_ERR=fbErr;
+let mode='login',creating=false,started=false;
 function setMode(m){
-  mode=m;const c=m==='create',lg=m==='login',fg=m==='forgot',rs=m==='reset';
+  mode=m;const c=m==='create',lg=m==='login',fg=m==='forgot';
   $('atl').classList.toggle('on',lg);$('atc').classList.toggle('on',c);
-  $('acw').hidden=!(c||rs);$('acph').hidden=!c;$('afpw').hidden=fg;$('ashl').hidden=fg;$('afg').hidden=!lg;
-  $('ago').textContent=c?'Create account':fg?'Send reset request':rs?'Set new password':'Log in';
-  $('asub').textContent=c?'Create your account':fg?'Enter your email to request a password reset':rs?'Choose a new password':'Log in to your account';
-  $('apw').autocomplete=(c||rs)?'new-password':'current-password';
-  $('aem').readOnly=rs;
-  const pl=document.querySelector('label[for=apw]').firstChild;if(pl)pl.textContent=rs?'New password':'Password';
+  $('acw').hidden=!c;$('acph').hidden=!c;$('afpw').hidden=fg;$('ashl').hidden=fg;$('afg').hidden=!lg;
+  $('ago').textContent=c?'Create account':fg?'Send reset email':'Log in';
+  $('asub').textContent=c?'Create your account':fg?'Enter your email to get a password reset link':'Log in to your account';
+  $('apw').autocomplete=c?'new-password':'current-password';
   $('aerr').textContent='';$('aerr').style.color='';
 }
-function leaveReset(){if(mode==='reset'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}$('aem').value=''}}
-async function doReset(email,pw){
-  const err=$('aerr');const q=new URLSearchParams(location.hash.slice(1));
-  const exp=+q.get('exp'),sig=q.get('sig'),em=(q.get('reset')||'').toLowerCase();
-  if(!em||em!==email||!exp||!sig){err.textContent='This reset link is invalid.';return}
-  if(Date.now()>exp){err.textContent='This reset link has expired. Ask your admin for a new one.';return}
-  if(sig!==await signReset(em,exp)){err.textContent='This reset link is invalid.';return}
-  let used=[];try{used=JSON.parse(localStorage.getItem('bp_usedreset')||'[]')}catch(e){}
-  if(used.indexOf(sig)>=0){err.textContent='This reset link has already been used.';return}
-  const users=rd(),u=users[em];
-  if(!u){err.textContent='No account was found for this email in this browser.';return}
-  if(u.role==='admin'||u.super){err.textContent='Admin passwords cannot be reset with a link.';return}
-  if(pw.length<8){err.textContent='Password must be at least 8 characters.';return}
-  if(pw!==$('apc').value){err.textContent='Passwords do not match.';return}
-  const salt=crypto.getRandomValues(new Uint8Array(16));u.salt=b64(salt);u.hash=await hashPw(pw,salt);wr(users);
-  used.push(sig);try{localStorage.setItem('bp_usedreset',JSON.stringify(used.slice(-50)))}catch(e){}
-  try{const R=JSON.parse(localStorage.getItem('bp_resets')||'[]').filter(x=>x.email!==em);localStorage.setItem('bp_resets',JSON.stringify(R))}catch(e){}
-  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
-  $('apw').value='';$('apc').value='';$('aem').value=em;
-  setMode('login');err.style.color='var(--pos)';err.textContent='Password updated. Please log in.';
+function showAuth(m,note){
+  $('auth').hidden=false;setMode(m||'login');
+  if(note){$('aerr').style.color='var(--pos)';$('aerr').textContent=note}
+  setTimeout(()=>{try{$('aem').focus()}catch(e){}},50);
 }
-function start(email,role){
-  role=role==='user'?'user':'admin';
-  window.BP_ROLE=role;window.BP_EMAIL=email;window.BP_KEY='basketpnl:shared';
-  try{if(role==='admin'&&!localStorage.getItem('basketpnl:shared')){let src=localStorage.getItem('basketpnl:'+email)||localStorage.getItem('basketpnl');if(!src){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('basketpnl:')===0&&k!=='basketpnl:shared'&&k.indexOf('basketpnl:view')<0){src=localStorage.getItem(k);if(src)break}}}if(src)localStorage.setItem('basketpnl:shared',src)}}catch(e){}
-  if(role==='user')document.body.classList.add('ro');
-  try{localStorage.setItem(SK,email)}catch(e){}
+async function start(fu,role){
+  if(started)return;started=true;
+  const email=(fu.email||'').toLowerCase();
+  window.BP_ROLE=role;window.BP_EMAIL=email;window.BP_UID=fu.uid;window.BP_AUTH=auth;window.BP_DB=db;window.BP_SUPER=email===SUPER;
+  let init=null;
+  try{const sn=await db.doc('app/data').get();if(sn.exists)init=sn.data().json}catch(e){}
+  if(init==null&&role==='admin'){
+    try{init=localStorage.getItem('basketpnl:shared')||localStorage.getItem('basketpnl');
+      if(!init){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('basketpnl:')===0&&k.indexOf('basketpnl:view')<0){init=localStorage.getItem(k);if(init)break}}}}catch(e){}
+  }
+  window.BP_INIT=init;let last=init,timer=null;
+  window.BP_SAVE=j=>{if(role!=='admin'||window.BP_NOSAVE)return;clearTimeout(timer);timer=setTimeout(()=>{last=j;db.doc('app/data').set({json:j,by:fu.uid,ts:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error('save failed',e))},700)};
   $('auth').hidden=true;document.body.classList.remove('locked');
   $('uem').textContent=email+' ('+(role==='admin'?'Admin':'User')+')';
-  $('lgo').onclick=()=>{try{localStorage.removeItem(SK)}catch(e){}location.reload()};
+  $('lgo').onclick=()=>{auth.signOut().then(()=>location.reload(),()=>location.reload())};
+  if(role==='user')document.body.classList.add('ro');
   const sc=document.createElement('script');sc.textContent=$('appsrc').textContent;document.body.appendChild(sc);
   if(role==='admin'){
     $('cpb').hidden=false;
-    $('cpb').onclick=()=>{tab('admins');setTimeout(()=>{const c=document.getElementById('cp0');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.focus()}},50)};
+    $('cpb').onclick=()=>{tab('admins');const go=()=>{const c=document.getElementById('cp0');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.focus()}else setTimeout(go,150)};setTimeout(go,150)};
   }
   if(role==='user'){
     ['paste','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.stopImmediatePropagation();e.preventDefault()},true));
     const root=$('app'),fix=()=>root.querySelectorAll('input,select,button').forEach(el=>{if(el.dataset.pg)return;el.disabled=true});
     new MutationObserver(fix).observe(root,{childList:true,subtree:true});fix();
   }
+  db.doc('app/data').onSnapshot(sn=>{
+    if(!sn.exists||sn.metadata.hasPendingWrites)return;
+    const d=sn.data();if(!d||d.by===fu.uid||d.json===last)return;
+    last=d.json;window.BP_APPLY&&window.BP_APPLY(d.json);
+  },()=>{});
 }
 async function submit(){
   const err=$('aerr');err.textContent='';err.style.color='';
+  if(!ready){err.textContent='Firebase is not set up yet. See SETUP.md.';return}
   const email=$('aem').value.trim().toLowerCase(),pw=$('apw').value;
-  if(!window.crypto||!crypto.subtle){err.textContent='This browser cannot run secure sign-in here. Open the page over https.';return}
-  if(Date.now()<lockUntil){err.textContent='Too many attempts. Wait '+Math.ceil((lockUntil-Date.now())/1000)+' seconds and try again.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){err.textContent='Enter a valid email address.';return}
-  if(mode==='forgot'){
-    try{const R=JSON.parse(localStorage.getItem('bp_resets')||'[]');if(!R.some(x=>x.email===email)){R.push({email:email,ts:Date.now()});localStorage.setItem('bp_resets',JSON.stringify(R))}}catch(e){}
-    err.style.color='var(--pos)';err.textContent='Request sent. Your admin will send you a password reset link.';return}
-  if(mode==='reset'){await doReset(email,pw);return}
-  if(!pw){err.textContent='Password is required.';return}
-  const users=rd();
   $('ago').disabled=true;
   try{
+    if(mode==='forgot'){
+      try{await auth.sendPasswordResetEmail(email)}catch(e){if(e.code!=='auth/user-not-found'&&e.code!=='auth/invalid-email')throw e}
+      err.style.color='var(--pos)';err.textContent='If this email is registered, a password reset link has been sent to it. Check your spam folder too.';return;
+    }
+    if(!pw){err.textContent='Password is required.';return}
     if(mode==='create'){
       const ph=$('aph').value.trim();
+      if(email===SUPER){err.textContent='This email is reserved. Please use another email.';return}
       if(!/^\d{10}$/.test(ph)){err.textContent='Phone number is required and must be exactly 10 digits.';return}
       if(pw.length<8){err.textContent='Password must be at least 8 characters.';return}
       if(pw!==$('apc').value){err.textContent='Passwords do not match.';return}
-      if(users[email]){err.textContent='An account with this email already exists. Log in instead.';return}
-      var role='user';
-      const salt=crypto.getRandomValues(new Uint8Array(16));
-      const first=!Object.keys(users).length;
-      users[email]={salt:b64(salt),hash:await hashPw(pw,salt),created:Date.now(),role:role,phone:ph};
-      wr(users);
-      // the first account adopts any data saved before accounts existed
-      try{const old=localStorage.getItem('basketpnl');if(first&&old&&!localStorage.getItem('basketpnl:'+email))localStorage.setItem('basketpnl:'+email,old)}catch(e){}
+      creating=true;
+      const cred=await auth.createUserWithEmailAndPassword(email,pw);
+      await db.doc('users/'+cred.user.uid).set({email:email,phone:ph,role:'user',created:Date.now()});
+      await auth.signOut();
       $('apw').value='';$('apc').value='';$('aph').value='';
-      setMode('login');
-      $('aerr').style.color='var(--pos)';
-      $('aerr').textContent='Account created. Please log in.';
+      setMode('login');$('aerr').style.color='var(--pos)';$('aerr').textContent='Account created. Please log in.';
       setTimeout(()=>{try{$('apw').focus()}catch(e){}},50);
-    }else{
-      const u=users[email];
-      const ok=u&&(await hashPw(pw,unb64(u.salt)))===u.hash;
-      if(!ok){
-        fails++;if(fails>=5){lockUntil=Date.now()+30000;fails=0}
-        err.textContent='Incorrect email or password.';return;
-      }
-      const ur=u.role==='admin'?'admin':'user';
-      fails=0;start(email,ur);
+      return;
     }
-  }catch(e){err.textContent='Something went wrong. Please try again.'}
-  finally{$('ago').disabled=false}
+    await auth.signInWithEmailAndPassword(email,pw);
+  }catch(e){err.textContent=fbErr(e)}
+  finally{$('ago').disabled=false;creating=false}
 }
-$('atl').onclick=()=>{leaveReset();setMode('login')};
+$('atl').onclick=()=>setMode('login');
+$('atc').onclick=()=>setMode('create');
 $('afl').onclick=e=>{e.preventDefault();setMode('forgot')};
-$('atc').onclick=()=>{leaveReset();setMode('create')};
 $('ago').onclick=submit;
 $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
 $('ashow').onchange=e=>{const t=e.target.checked?'text':'password';$('apw').type=t;$('apc').type=t};
 ['aem','aph','apw','apc'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit()}}));
-let cur=null;try{cur=localStorage.getItem(SK)}catch(e){}
-if(location.hash.indexOf('#reset=')===0){
-  $('auth').hidden=false;setMode('reset');
-  try{$('aem').value=(new URLSearchParams(location.hash.slice(1)).get('reset')||'').toLowerCase()}catch(e){}
-}
-else if(cur&&rd()[cur]){start(cur,rd()[cur].role==='admin'?'admin':'user')}
-else{
-  // no account yet: open on Create account
-  $('auth').hidden=false;setMode(Object.keys(rd()).length?'login':'create');
-  setTimeout(()=>{try{$('aem').focus()}catch(e){}},50);
-}
+if(!ready){showAuth('login');$('acfg').hidden=false;$('ago').disabled=true}
+else auth.onAuthStateChanged(async fu=>{
+  if(creating)return;
+  if(!fu){started=false;showAuth('login');return}
+  let role='user';
+  try{
+    const em=(fu.email||'').toLowerCase(),ref=db.doc('users/'+fu.uid),sn=await ref.get();
+    if(!sn.exists){role=em===SUPER?'admin':'user';await ref.set({email:em,phone:'',role:role,created:Date.now()})}
+    else role=sn.data().role==='admin'?'admin':'user';
+    if(em===SUPER)role='admin';
+  }catch(e){
+    try{await auth.signOut()}catch(x){}
+    showAuth('login');$('aerr').textContent='Could not load your account. Check the Firestore rules from SETUP.md.';return;
+  }
+  start(fu,role);
+});
 })();
 </script>
 

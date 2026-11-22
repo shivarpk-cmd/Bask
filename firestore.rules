@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // The main admin. Create this account in Firebase Console first (see SETUP.md).
+    function isSuper() {
+      return signedIn() && request.auth.token.email.lower() == 'indexreturns@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSuper() || (signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    // One document per account: { email, phone, role: 'user' | 'admin' }
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      // Anyone can create their own document, but only as a plain user
+      // (the main admin may create hers/his as admin). Admins can create user documents.
+      allow create: if signedIn() && (
+        (request.auth.uid == uid && (request.resource.data.role == 'user'
+          || (isSuper() && request.resource.data.role == 'admin')))
+        || isAdmin());
+
+      // Main admin can change anything. Other admins may only promote a user to admin.
+      allow update: if isSuper() || (isAdmin()
+        && resource.data.role == 'user'
+        && request.resource.data.role == 'admin'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']));
+
+      allow delete: if false;
+    }
+
+    // Shared trade data: everyone signed in can read, only admins can write.
+    match /app/data {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
