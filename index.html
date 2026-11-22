@@ -1043,11 +1043,11 @@ async function doReset(email,pw){
   if(sig!==await signReset(em,exp)){err.textContent='This reset link is invalid.';return}
   let used=[];try{used=JSON.parse(localStorage.getItem('bp_usedreset')||'[]')}catch(e){}
   if(used.indexOf(sig)>=0){err.textContent='This reset link has already been used.';return}
-  const users=rd(),u=users[em];
-  if(!u){err.textContent='No account was found for this email in this browser.';return}
-  if(u.role==='admin'||u.super){err.textContent='Admin passwords cannot be reset with a link.';return}
+  const users=rd();let u=users[em];
+  if(u&&(u.role==='admin'||u.super)){err.textContent='Admin passwords cannot be reset with a link.';return}
   if(pw.length<8){err.textContent='Password must be at least 8 characters.';return}
   if(pw!==$('apc').value){err.textContent='Passwords do not match.';return}
+  if(!u)u=users[em]={role:'user',phone:'',created:Date.now()};
   const salt=crypto.getRandomValues(new Uint8Array(16));u.salt=b64(salt);u.hash=await hashPw(pw,salt);wr(users);
   used.push(sig);try{localStorage.setItem('bp_usedreset',JSON.stringify(used.slice(-50)))}catch(e){}
   try{const R=JSON.parse(localStorage.getItem('bp_resets')||'[]').filter(x=>x.email!==em);localStorage.setItem('bp_resets',JSON.stringify(R))}catch(e){}
