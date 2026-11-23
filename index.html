@@ -469,11 +469,13 @@ ryRender();
 let cur=0;
 function renderTabs(){
   $('tabs').innerHTML=`<button data-t="0" class="${cur===0?'on':''}">Overview</button><button data-t="1" class="${cur===1?'on':''}">Trades</button><button data-t="2" class="${cur===2?'on':''}">Stocks</button>`+S.master.map(m=>`<button data-t="${m.id}" class="${cur===m.id?'on':''}">${esc(m.name||'(unnamed)')}</button>`).join('');
+  if(window.BP_ROLE!=='admin')$('tabs').innerHTML=`<button data-t="0" class="on">Overview</button>`;
   if(window.BP_ROLE==='admin')$('tabs').insertAdjacentHTML('beforeend',`<button data-t="admins" class="${cur==='admins'?'on':''}">Admins</button>`);
   rangeInfo();
 }
 $('tabs').onclick=e=>{const t=e.target.dataset.t;if(t)tab(t==='0'?0:t==='1'?1:t==='2'?2:t)};
 function tab(t){
+  if(window.BP_ROLE!=='admin')t=0;
   cur=t;$('p0').hidden=t!==0;$('p1').hidden=t!==1;$('p2').hidden=t!==2;$('p3').hidden=typeof t!=='string'||t==='admins';$('p4').hidden=t!=='admins';
   if(t===0)overview();else if(t===1)build();else if(t===2)buildM();else if(t==='admins'&&window.BP_ROLE==='admin')adminView();else stockView(t);
   renderTabs();
