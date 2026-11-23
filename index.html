@@ -59,6 +59,7 @@ body.locked .wrap{display:none}
 .auth input[type=checkbox]{width:auto}
 .aerr{color:var(--neg);font-size:13px;min-height:18px;margin-bottom:8px}
 button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:var(--muted)}button.cpy:hover{color:var(--accent);border-color:var(--accent)}
+#acm{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}#acm[hidden]{display:none}#acm .box{width:100%;max-width:420px;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:18px;margin:auto}#acm h2{margin:0 0 10px;font-size:18px}#acm h3{margin:16px 0 6px;font-size:14px}#acm .f{margin:6px 0}#acm .f label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}#acm .m{font-size:12px;min-height:16px;margin-top:6px}.wrap .hd h1{margin-bottom:16px}
 #bpload[hidden]{display:none!important}#ubar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}#ubar button{padding:4px 12px}body.ro .x,body.ro #add,body.ro #upl,body.ro #clr,body.ro #hclr,body.ro #addcard,body.ro #pend{display:none!important}body.ro #app input:disabled,body.ro #app select:disabled{opacity:1;cursor:default}
 </style>
 </head>
@@ -80,8 +81,22 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <div class="note"><span style="color:var(--neg)">*</span> Mandatory field. Accounts and data are stored securely in the cloud. Passwords are never visible to the site owner.</div>
 </div>
 </div>
+<div id="acm" hidden><div class="box" role="dialog" aria-label="My account">
+<h2>My account</h2>
+<h3>Phone number</h3>
+<div class="f"><label for="acph">Ph (10-digit)</label><input id="acph" type="tel" inputmode="numeric" maxlength="10"></div>
+<button type="button" class="p" id="acphs">Update phone</button><div class="m" id="acphm"></div>
+<h3>Email</h3>
+<div class="f"><label for="acem">New email id</label><input id="acem" type="email" inputmode="email"></div>
+<button type="button" class="p" id="acems">Update email</button><div class="m" id="acemm"></div>
+<h3>Password</h3>
+<div class="f"><label for="acp1">New password</label><input id="acp1" type="password" autocomplete="new-password" placeholder="Min 8 characters"></div>
+<div class="f"><label for="acp2">Confirm new password</label><input id="acp2" type="password" autocomplete="new-password" placeholder="Re-enter new password"></div>
+<button type="button" class="p" id="acps">Change password</button><div class="m" id="acpm"></div>
+<div style="text-align:right;margin-top:14px"><button type="button" id="acx">Close</button></div>
+</div></div>
 <div class="wrap">
-<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>Change password</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
+<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>My account</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
 
 <div class="tabs" id="tabs"></div>
 <div class="rng"><span>Date range</span><input type="date" id="rf" aria-label="From date"><span>to</span><input type="date" id="rt" aria-label="To date"><select id="rm" aria-label="Month"><option value="">All months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><select id="ry" aria-label="Year"></select><button id="rr">Reset</button><span id="rl"></span></div>
@@ -1062,10 +1077,45 @@ async function start(email,role,uid){
   $('uem').textContent=email+' ('+(role==='admin'?'Admin':'User')+')';
   $('lgo').onclick=async()=>{try{await BPSync.flushNow()}catch(e){}try{localStorage.removeItem(KEY)}catch(e){}try{await sb.auth.signOut()}catch(e){}location.reload()};
   const sc=document.createElement('script');sc.textContent=$('appsrc').textContent;document.body.appendChild(sc);BPSync.after();
-  if(role==='admin'){
-    $('cpb').hidden=false;
-    $('cpb').onclick=()=>{tab('admins');setTimeout(()=>{const c=document.getElementById('cp1');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.focus()}},600)};
-  }
+  $('cpb').hidden=false;
+  (function(){
+    const m=$('acm'),say=(id,t,ok)=>{const e=$(id);e.textContent=t;e.style.color=ok?'var(--pos)':'var(--neg)'};
+    let curPh='';
+    $('cpb').onclick=async()=>{
+      ['acphm','acemm','acpm'].forEach(i=>$(i).textContent='');
+      $('acp1').value=$('acp2').value='';$('acem').value=email;$('acph').value=curPh;m.hidden=false;
+      if(!curPh){try{const g=await sb.auth.getUser();curPh=(g.data&&g.data.user&&g.data.user.user_metadata&&g.data.user.user_metadata.phone)||'';$('acph').value=curPh}catch(e){}}
+      if(!curPh){try{const r=await sb.from('profiles').select('phone').eq('id',uid).maybeSingle();if(r.data&&r.data.phone){curPh=r.data.phone;$('acph').value=curPh}}catch(e){}}
+    };
+    $('acx').onclick=()=>{m.hidden=true};
+    m.addEventListener('mousedown',e=>{if(e.target===m)m.hidden=true});
+    $('acph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
+    $('acphs').onclick=async()=>{
+      const p=$('acph').value.trim();
+      if(!/^\d{10}$/.test(p))return say('acphm','Phone number must be exactly 10 digits.');
+      const x=await sb.auth.updateUser({data:{phone:p}});
+      if(x.error)return say('acphm',x.error.message);
+      try{await sb.from('profiles').update({phone:p}).eq('id',uid)}catch(e){}
+      curPh=p;say('acphm','Phone number updated.',true);
+    };
+    $('acems').onclick=async()=>{
+      const v=$('acem').value.trim().toLowerCase();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))return say('acemm','Enter a valid email address.');
+      if(v===email)return say('acemm','This is already your email.');
+      const x=await sb.auth.updateUser({email:v},{emailRedirectTo:location.origin+location.pathname});
+      if(x.error)return say('acemm',x.error.message);
+      say('acemm','Confirmation link sent. Open it from your inbox (check both old and new email) to finish the change.',true);
+    };
+    $('acps').onclick=async()=>{
+      const a=$('acp1').value,b=$('acp2').value;
+      if(!a||!b)return say('acpm','Fill in both password fields.');
+      if(a.length<8)return say('acpm','Password must be at least 8 characters.');
+      if(a!==b)return say('acpm','Passwords do not match.');
+      const x=await sb.auth.updateUser({password:a});
+      if(x.error)return say('acpm',x.error.message);
+      $('acp1').value=$('acp2').value='';say('acpm','Password changed.',true);
+    };
+  })();
   if(role==='user'){
     ['paste','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.stopImmediatePropagation();e.preventDefault()},true));
     const root=$('app'),fix=()=>root.querySelectorAll('input,select,button').forEach(el=>{if(el.dataset.pg)return;el.disabled=true});
