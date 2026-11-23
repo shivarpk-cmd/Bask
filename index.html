@@ -566,7 +566,7 @@ function overview(){
     stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+fdm(tdD)+')','\u20b9 '+f(tdP),cls(tdP))+
     sw(stat('Best day ('+fdm(bd.d)+')','₹ '+f(bd.p),cls(bd.p)))+sw(stat('Worst day ('+fdm(wd.d)+')','₹ '+f(wd.p),cls(wd.p)))+
     sw(stat('Best stock',f(bs.p)+' ('+esc(bs.name)+')',cls(bs.p)))+sw(stat('Weakest stock',f(ws.p)+' ('+esc(ws.name)+')',cls(ws.p)))+
-    sw(stat('Trading days',Y.length+' ('+f(up/Y.length*100)+' % green)'))+stat('Stocks / Trades',St.length+' / '+A.length)+
+    stat('Trading days',Y.length)+stat('Stocks / Trades',St.length+' / '+A.length)+
     stat('Win rate',f(w/A.length*100)+' %')+stat('Profit factor',gl?f(gp/gl):(gp?'\u221e':'\u2014'))+stat('Avg PNL per trade','\u20b9 '+f(tp/A.length),cls(tp))+
     stat('Max drawdown','\u20b9 '+f(mdd),cls(mdd))+stat('Max drawdown % of capital',tinv?f(mdd/tinv*100)+' %':'\u2014',tinv?cls(mdd):'')+
     stat('Actual pts',f(ta))+stat('TV PNL',hasTV?'\u20b9 '+f(ttp):'\u2014',hasTV?cls(ttp):'')+stat('TV pts',hasTV?f(tt):'\u2014')+stat('Diff pts',hasTV?f(Math.abs(tt-ta)):'\u2014')+
