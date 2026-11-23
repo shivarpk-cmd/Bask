@@ -32,6 +32,7 @@ table{border-collapse:collapse;width:100%;min-width:950px}
 th,td{padding:6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:12px;color:var(--muted);font-weight:600}
 th:first-child,td:first-child{text-align:left}
+.dw{position:relative;display:inline-block}.dw .ph{position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;font-style:normal;color:var(--muted)}.dw input:not(.has)::-webkit-datetime-edit{color:transparent}.dw input.has+.ph{display:none}
 td input{text-align:right}td:first-child input{text-align:left;min-width:200px}td input[type=date]{min-width:140px}
 td:first-child select{min-width:200px}
 td.calc{font-weight:600;padding:6px 10px}
@@ -100,7 +101,7 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="alb" hidden>Admin login</button><button type="button" id="cpb" hidden>My account</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div></div></div></div>
 
 <div class="tabs" id="tabs"></div>
-<div class="rng"><span>Date range</span><input type="date" id="rf" aria-label="From date"><span>to</span><input type="date" id="rt" aria-label="To date"><select id="rm" aria-label="Month"><option value="">All months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><select id="ry" aria-label="Year"></select><button id="rr">Reset</button><span id="rl"></span></div>
+<div class="rng"><select id="ry" aria-label="Year"></select><select id="rm" aria-label="Month"><option value="">Month</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><span>Date range</span><span class="dw"><input type="date" id="rf" aria-label="From date"><i class="ph">DD-MM-YYYY</i></span><span>to</span><span class="dw"><input type="date" id="rt" aria-label="To date"><i class="ph">DD-MM-YYYY</i></span><button id="rr">Reset</button><span id="rl"></span></div>
 <div id="app">
 
 <div id="p0"></div>
@@ -449,12 +450,13 @@ const hvis=()=>S.hist.filter(inR);
 const hm=h=>{const m=mget(h.sid);return{name:m?m.name:h.name,qty:h.qty,inv:(m&&!h.manual)?m.inv:h.inv}};
 const clampD=d=>{if(F.y||F.m){const y=F.y||d.slice(0,4),m=F.m||d.slice(5,7);if(d.slice(0,4)!==y||d.slice(5,7)!==m)d=`${y}-${m}-01`}return F.from&&d<F.from?F.from:F.to&&d>F.to?F.to:d};
 function rangeInfo(){$('rl').textContent=act()?`Showing ${hvis().length} of ${S.hist.length} trades`:''}
-['rf','rt'].forEach(id=>$(id).onchange=()=>{let a=$('rf').value,b=$('rt').value;if(a&&b&&a>b){[a,b]=[b,a];$('rf').value=a;$('rt').value=b}F.from=a;F.to=b;tab(cur)});
+const dpSync=()=>['rf','rt'].forEach(id=>$(id).classList.toggle('has',!!$(id).value));
+['rf','rt'].forEach(id=>$(id).onchange=()=>{dpSync();let a=$('rf').value,b=$('rt').value;if(a&&b&&a>b){[a,b]=[b,a];$('rf').value=a;$('rt').value=b}F.from=a;F.to=b;tab(cur)});
 let YX=false;
 function ryRender(){
   const cy=new Date().getFullYear();let lo=cy-2;
   if(YX){lo=Math.min(2015,cy-2);S.rows.concat(S.hist).forEach(r=>{const y=+(r.date||'').slice(0,4);if(y&&y<lo)lo=y})}
-  let o='<option value="">All years</option>';
+  let o='<option value="">Year</option>';
   for(let y=cy;y>=lo;y--)o+=`<option value="${y}">${y}</option>`;
   if(!YX)o+='<option value="more">More years\u2026</option>';
   $('ry').innerHTML=o;$('ry').value=F.y;
@@ -465,8 +467,8 @@ $('ry').onchange=()=>{
   if(v==='more'){YX=true;ryRender();try{$('ry').showPicker()}catch(e){}return}
   F.y=v;tab(cur);
 };
-$('rr').onclick=()=>{F.from=F.to=F.m=F.y='';YX=false;$('rf').value=$('rt').value=$('rm').value='';ryRender();tab(cur)};
-ryRender();
+$('rr').onclick=()=>{F.from=F.to=F.m=F.y='';YX=false;$('rf').value=$('rt').value=$('rm').value='';dpSync();ryRender();tab(cur)};
+ryRender();dpSync();
 let cur=0;
 function renderTabs(){
   $('tabs').innerHTML=`<button data-t="0" class="${cur===0?'on':''}">Overview</button><button data-t="1" class="${cur===1?'on':''}">Trades</button><button data-t="2" class="${cur===2?'on':''}">Stocks</button>`+S.master.map(m=>`<button data-t="${m.id}" class="${cur===m.id?'on':''}">${esc(m.name||'(unnamed)')}</button>`).join('');
