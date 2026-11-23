@@ -534,7 +534,7 @@ function overview(){
   const dk=Object.keys(D).sort();let c=0,pk=0,mdd=0,ca=0,ct=0,cu=0;
   const Y=dk.map(k=>{const y=D[k];c+=y.p;pk=Math.max(pk,c);mdd=Math.min(mdd,c-pk);ca+=y.a;ct+=y.t;cu+=y.u;return{d:k,p:y.p,c,dd:c-pk,ca,ct,cu}});
   const St=[...X.values()].sort((a,b)=>b.p-a.p),sgn=v=>(v>0?'+':'')+f(v);
-  const roi=tinv?tp/tinv*100:null,bd=Y.reduce((a,b)=>b.p>a.p?b:a),wd=Y.reduce((a,b)=>b.p<a.p?b:a),bs=St[0],ws=St[St.length-1];
+  const roi=tinv?tpa/tinv*100:null,bd=Y.reduce((a,b)=>b.p>a.p?b:a),wd=Y.reduce((a,b)=>b.p<a.p?b:a),bs=St[0],ws=St[St.length-1];
   const up=Y.filter(y=>y.p>0).length,ld=Y.map(y=>y.d),sn=St.map(s=>s.name);
   const dpf=a=>{let k=0;return a.map(v=>{k=Math.max(k,v);return v-k})};
   const rows=St.map((s,i)=>{const r=s.i?s.p/s.i*100:null;return `<tr><td>${i+1}. ${esc(s.name)}</td><td>${s.n}</td><td>${f(s.w/s.n*100)} %</td><td>${s.i?f(s.i):'\u2014'}</td><td class="${cls(s.p)}">${f(s.p)}</td><td class="${r==null?'':cls(r)}">${r==null?'\u2014':f(r)+' %'}</td><td>${f(s.a)}</td><td>${s.tv?f(s.t):'\u2014'}</td><td>${s.tv?f(Math.abs(s.d)):'\u2014'}</td><td class="${cls(s.dd)}">${f(s.dd)}</td></tr>`}).join('');
