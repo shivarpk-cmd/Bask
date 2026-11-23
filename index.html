@@ -18,7 +18,7 @@ h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 14px;font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
 .card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(165px,100%),1fr));gap:10px}
+.grid{display:grid;grid-template-rows:repeat(2,auto);grid-auto-flow:column;grid-auto-columns:minmax(125px,1fr);gap:10px;overflow-x:auto;padding-bottom:2px}
 .stat{background:var(--bg);border-radius:10px;padding:10px 12px;min-width:0;overflow:hidden}
 .stat .l{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat.w .v{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;line-height:1.25}
 .stat .v{font-size:clamp(14px,1.2vw + 7px,20px);font-weight:650;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -96,7 +96,7 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <div style="text-align:right;margin-top:14px"><button type="button" id="acx">Close</button></div>
 </div></div>
 <div class="wrap">
-<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>My account</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
+<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>My account</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div></div></div></div>
 
 <div class="tabs" id="tabs"></div>
 <div class="rng"><span>Date range</span><input type="date" id="rf" aria-label="From date"><span>to</span><input type="date" id="rt" aria-label="To date"><select id="rm" aria-label="Month"><option value="">All months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><select id="ry" aria-label="Year"></select><button id="rr">Reset</button><span id="rl"></span></div>
@@ -628,28 +628,7 @@ function stockView(id){
     `</div><div class="card" style="margin-top:16px"><h2>Trade log</h2><div class="scroll"><table style="min-width:900px"><thead><tr><th>#</th><th>Date</th><th>PNL (₹)</th><th>Cumulative PNL</th><th>Peak</th><th>Drawdown</th><th>Actual pts</th><th>TV pts</th><th>Diff</th><th>Cumulative pts</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Trades are ordered by date. Drawdown = cumulative PNL minus its running peak (the peak starts at 0).</div></div>`;
 }
 if(!S.rows.length&&window.BP_ROLE!=='user')S.rows.push({id:uid(),sid:'',side:'BUY',date:today(),sign:'+',tsign:'+',pnl:'',tv:''});
-let V={z:100,fs:15};
-let VS=false;
-try{const x=JSON.parse(localStorage.getItem('bpview')||'null');if(x&&x.z&&x.fs){V=x;VS=true}}catch(e){}
-function view(){
-  V.z=Math.min(200,Math.max(25,Math.round(V.z)||100));V.fs=Math.min(22,Math.max(9,V.fs));
-  $('app').style.zoom=V.z/100;document.body.style.setProperty('--fs',V.fs+'px');
-  if(document.activeElement!==$('zv'))$('zv').value=V.z;$('fv').textContent=V.fs+'px';
-  try{localStorage.setItem('bpview',JSON.stringify(V))}catch(e){}
-}
-$('zo').onclick=()=>{V.z-=1;view()};$('zi').onclick=()=>{V.z+=1;view()};
-$('zv').oninput=e=>{const v=parseFloat(e.target.value);if(v>=25&&v<=200){V.z=v;view()}};
-$('zv').onblur=()=>view();
-$('zv').onkeydown=e=>{if(e.key==='Enter')e.target.blur()};
-$('fo').onclick=()=>{V.fs-=1;view()};$('fi').onclick=()=>{V.fs+=1;view()};
-$('rs').onclick=()=>{V={z:100,fs:15};view()};
-function fit(){
-  $('app').style.zoom=1;
-  let z=Math.min(150,Math.max(25,innerWidth/14));
-  V.z=Math.floor(z);view();
-}
 document.addEventListener('mouseover',e=>{const s=e.target.closest&&e.target.closest('.stat');if(s&&!s.title)s.title=s.textContent});
-$('fit').onclick=fit;
 
 /* ---------- File upload (broker files) ---------- */
 let PI=null,lastSig='';
@@ -993,11 +972,9 @@ const tip=$('tip');
   tip.style.display='block';
   tip.style.left=Math.max(4,Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8))+'px';tip.style.top=(e.clientY+14)+'px';
 }));
-view();
 buildM();
 build();
 tab(0);
-view();
 </script>
 <script>
 (function(){
