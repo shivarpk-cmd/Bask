@@ -94,7 +94,7 @@ h1{font-size:20px}
 }
 /* Overview: all metrics + charts laid out compactly so they fit one screen on laptops/desktops */
 @media(min-width:1101px){
-#p0{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#p0{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 #p0[hidden]{display:none}
 #p0 .g2{display:contents}
 #p0>.card,#p0>details.card,#p0 .g2>.card{margin:0!important;padding:8px 10px}
@@ -536,7 +536,7 @@ function fit(){
   requestAnimationFrame(()=>{
     const over=document.documentElement.scrollHeight-innerHeight;if(over<=0)return;
     const h=a.getBoundingClientRect().height;if(!h)return;
-    a.style.zoom=Math.max(.5,(h-over)/h);
+    a.style.zoom=Math.max(.45,(h-over)/h);
   });
 }
 addEventListener('resize',fit);document.addEventListener('toggle',fit,true);
@@ -545,7 +545,7 @@ const fk=v=>Math.abs(v)>=1000?v.toLocaleString('en-IN',{maximumFractionDigits:0}
 function chart(title,kind,ser,labels,mode){
   if(window.BP_ROLE!=='admin'&&(/ by stock/i.test(title)||/^Cumulative points/i.test(title)))return '';
   if(window.BP_ROLE!=='admin'){ser=ser.filter(x=>x.name!=='TV');title=title.replace(/ ?\(Actual vs TV\)/,'').replace('Actual vs TV points','Actual points')}
-  const W=innerWidth>=1101?420:640,H=innerWidth>=1101?190:230,L=58,R=12,T=14,B=30,N=labels.length,pw=W-L-R;
+  const W=innerWidth>=1101?760:640,H=innerWidth>=1101?150:230,L=58,R=12,T=14,B=30,N=labels.length,pw=W-L-R;
   const all=[0];ser.forEach(s=>s.v.forEach(x=>x!=null&&all.push(x)));
   let lo=Math.min(...all),hi=Math.max(...all);if(lo===hi)hi=lo+1;
   const pd=(hi-lo)*.08;if(lo<0)lo-=pd;if(hi>0)hi+=pd;
