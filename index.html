@@ -67,6 +67,7 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <div id="bpload" hidden style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--muted);z-index:999;font-size:14px">Loading your data…</div>
 <div class="auth" id="auth" hidden>
 <div class="box">
+<a href="#" id="abk" hidden style="display:block;margin-bottom:10px;font-size:13px;color:var(--text)">← Back to site</a>
 <h1>Basket PNL Tracker</h1>
 <div class="sub" id="asub">Log in to your account</div>
 <div class="atabs"><button type="button" id="atl" class="on">Log in</button><button type="button" id="atc">Create account</button></div>
@@ -96,7 +97,7 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <div style="text-align:right;margin-top:14px"><button type="button" id="acx">Close</button></div>
 </div></div>
 <div class="wrap">
-<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>My account</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div></div></div></div>
+<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="alb" hidden>Admin login</button><button type="button" id="cpb" hidden>My account</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div></div></div></div>
 
 <div class="tabs" id="tabs"></div>
 <div class="rng"><span>Date range</span><input type="date" id="rf" aria-label="From date"><span>to</span><input type="date" id="rt" aria-label="To date"><select id="rm" aria-label="Month"><option value="">All months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><select id="ry" aria-label="Year"></select><button id="rr">Reset</button><span id="rl"></span></div>
@@ -568,11 +569,23 @@ async function adminView(){
     const act=me?'<span class="note">You</span>':ad?`<button data-adm="demote" data-id="${esc(u.id)}">Remove admin</button>`:`<button class="p" data-adm="promote" data-id="${esc(u.id)}">Make admin</button>`;
     const cb=v=>v?`<button type="button" class="cpy" data-cp="${esc(v)}" aria-label="Copy" title="Copy">⧉</button>`:'';
     return `<tr><td>${esc(u.email)} ${cb(u.email)}</td><td>${esc(u.phone||'—')} ${cb(u.phone)}</td><td class="${ad?'pos':''}">${ad?'Admin':'User'}</td><td>${act}</td></tr>`}).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted)">No accounts</td></tr>';
+  let reqL=false,setErr='';
+  try{const q=await sb.from('app_settings').select('require_login').eq('id',1).maybeSingle();if(q.error)setErr='Settings table not found. Run access_setup.sql in Supabase (SQL editor) once.';else reqL=!!(q.data&&q.data.require_login)}catch(e){setErr='Could not read the setting.'}
+  if(cur!=='admins')return;
+  const accHtml=()=>`<div class="card"><h2>Website access</h2><div class="note" style="margin:0 0 10px">User login is <b class="${reqL?'pos':'neg'}">${reqL?'ENABLED':'DISABLED'}</b>. ${reqL?'Visitors must log in to view the website.':'Anyone with the link can view the website without logging in (view only). Only admins can log in and edit.'}</div><button type="button" class="p" id="acct"${setErr?' disabled':''}>${reqL?'Disable user login':'Enable user login'}</button><div class="note" id="accm" style="margin-top:8px;color:var(--neg)">${setErr}</div></div>`;
   const fld=(l,id,t,ph)=>`<div><div class="note" style="margin:0 0 4px">${l} <span class="neg">*</span></div><input id="${id}" type="${t}" autocomplete="off" placeholder="${ph}"></div>`;
   const grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px';
-  el.innerHTML=`<div class="card"><h2>Change my password</h2><div style="${grid}">${fld('New password','cp1','password','Min 8 characters')}${fld('Confirm new password','cp2','password','Re-enter new password')}</div><div class="bar"><button class="p" id="cpg">Change password</button></div><div class="note" id="cpm"></div></div>`+
+  el.innerHTML=accHtml()+`<div class="card"><h2>Change my password</h2><div style="${grid}">${fld('New password','cp1','password','Min 8 characters')}${fld('Confirm new password','cp2','password','Re-enter new password')}</div><div class="bar"><button class="p" id="cpg">Change password</button></div><div class="note" id="cpm"></div></div>`+
   `<div class="card"><h2>All accounts</h2><div class="scroll"><table style="min-width:520px"><thead><tr><th>Email</th><th>Ph</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">People create their own account on the login screen and start as Users (view only). Use Make admin to let someone edit. Password resets are sent by email from the login screen (Forgot password).</div></div>`;
   const msg=(id,t,ok)=>{const m=$(id);if(!m)return;m.textContent=t;m.style.color=ok?'var(--pos)':'var(--neg)'};
+  const tog=async()=>{
+    const b=$('acct'),v=!reqL;b.disabled=true;
+    const x=await sb.from('app_settings').upsert({id:1,require_login:v});
+    if(x.error){b.disabled=false;$('accm').textContent=x.error.message;return}
+    reqL=v;const c=b.closest('.card');c.outerHTML=accHtml();
+    $('acct').onclick=tog;
+  };
+  $('acct').onclick=tog;
   $('cpg').onclick=async()=>{
     const n1=$('cp1').value,n2=$('cp2').value;
     if(!n1||!n2)return msg('cpm','Fill in both password fields.');
@@ -1028,6 +1041,13 @@ const BPSync=(function(){
 })();
 
 let mode='login',fails=0,lockUntil=0,started=false;
+async function loginRequired(){
+  try{
+    const r=await sb.from('app_settings').select('require_login').eq('id',1).maybeSingle();
+    if(r.error)return !/42P01|PGRST205|does not exist|schema cache/i.test((r.error.code||'')+' '+(r.error.message||''));
+    return !!(r.data&&r.data.require_login);
+  }catch(e){return true}
+}
 function setMode(m){
   mode=m;const c=m==='create',lg=m==='login',fg=m==='forgot',rs=m==='reset';
   $('atl').classList.toggle('on',lg);$('atc').classList.toggle('on',c);
@@ -1042,6 +1062,7 @@ function setMode(m){
 function showAuth(m){$('auth').hidden=false;setMode(m||'login');setTimeout(()=>{try{$('aem').focus()}catch(e){}},50)}
 
 async function enter(user){
+  if(window.BP_VISITOR){location.reload();return}
   if(started)return;started=true;
   let role='user';
   try{const r=await sb.from('profiles').select('role').eq('id',user.id).maybeSingle();if(r.data&&r.data.role==='admin')role='admin'}catch(e){}
@@ -1056,10 +1077,10 @@ async function start(email,role,uid){
   BPSync.fail();
   if(ld)ld.hidden=true;
   $('auth').hidden=true;document.body.classList.remove('locked');
-  $('uem').textContent=email+' ('+(role==='admin'?'Admin':'User')+')';
+  $('uem').textContent=window.BP_VISITOR?'Visitor':email+' ('+(role==='admin'?'Admin':'User')+')';
   $('lgo').onclick=async()=>{try{await BPSync.flushNow()}catch(e){}try{localStorage.removeItem(KEY)}catch(e){}try{await sb.auth.signOut()}catch(e){}location.reload()};
   const sc=document.createElement('script');sc.textContent=$('appsrc').textContent;document.body.appendChild(sc);BPSync.after();
-  $('cpb').hidden=false;
+  $('cpb').hidden=!!window.BP_VISITOR;$('lgo').hidden=!!window.BP_VISITOR;$('alb').hidden=!window.BP_VISITOR;
   (function(){
     const m=$('acm'),say=(id,t,ok)=>{const e=$(id);e.textContent=t;e.style.color=ok?'var(--pos)':'var(--neg)'};
     let curPh='';
@@ -1163,6 +1184,8 @@ async function submit(){
 (function(){const h=$('home'),go=()=>{if(!document.body.classList.contains('locked'))tab(0);window.scrollTo({top:0,behavior:'smooth'})};h.onclick=go;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}})();
 $('atl').onclick=()=>setMode('login');
 $('atc').onclick=()=>setMode('create');
+$('alb').onclick=()=>{showAuth('login');$('atc').hidden=true;$('abk').hidden=false};
+$('abk').onclick=e=>{e.preventDefault();$('auth').hidden=true;$('atc').hidden=false;$('abk').hidden=true};
 $('afg').onclick=e=>{e.preventDefault();setMode('forgot')};
 $('ago').onclick=submit;
 $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
@@ -1174,7 +1197,11 @@ else if(recovery){
   showAuth('reset');
   sb.auth.getSession().then(r=>{const u=r.data&&r.data.session&&r.data.session.user;if(u)$('aem').value=u.email});
 }else{
-  sb.auth.getSession().then(r=>{if(r.data&&r.data.session)enter(r.data.session.user);else showAuth('login')}).catch(()=>showAuth('login'));
+  sb.auth.getSession().then(async r=>{
+    if(r.data&&r.data.session){enter(r.data.session.user);return}
+    if(await loginRequired()){showAuth('login');return}
+    window.BP_VISITOR=true;started=true;start('','user',null);
+  }).catch(()=>showAuth('login'));
 }
 })();
 </script>
