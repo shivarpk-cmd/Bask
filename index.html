@@ -535,6 +535,8 @@ function overview(){
     const d=r.date||'No date',y=D[d]=D[d]||{p:0,a:0,t:0,u:0};y.p+=pn;y.a+=act;if(tv!=null){y.t+=tv;y.u+=tvp}
   });
   tinv=[...X.values()].reduce((a,s)=>a+s.i,0);
+  // Today PNL = actual PNL amount (sign x |PNL|) of all trades dated today (device date), regardless of the date-range filter
+  const tdD=today(),tdP=S.hist.reduce((a,h)=>(h.date||'')===tdD?a+(h.sign==='-'?-1:1)*Math.abs(n(h.pnl)):a,0);
   const dk=Object.keys(D).sort();let c=0,pk=0,mdd=0,ca=0,ct=0,cu=0;
   const Y=dk.map(k=>{const y=D[k];c+=y.p;pk=Math.max(pk,c);mdd=Math.min(mdd,c-pk);ca+=y.a;ct+=y.t;cu+=y.u;return{d:k,p:y.p,c,dd:c-pk,ca,ct,cu}});
   const St=[...X.values()].sort((a,b)=>b.p-a.p),sgn=v=>(v>0?'+':'')+f(v);
@@ -543,7 +545,7 @@ function overview(){
   const dpf=a=>{let k=0;return a.map(v=>{k=Math.max(k,v);return v-k})};
   const rows=St.map((s,i)=>{const r=s.i?s.p/s.i*100:null;return `<tr><td>${i+1}. ${esc(s.name)}</td><td>${s.n}</td><td>${f(s.w/s.n*100)} %</td><td>${s.i?f(s.i):'\u2014'}</td><td class="${cls(s.p)}">${f(s.p)}</td><td class="${r==null?'':cls(r)}">${r==null?'\u2014':f(r)+' %'}</td><td>${f(s.a)}</td><td>${s.tv?f(s.t):'\u2014'}</td><td>${s.tv?f(Math.abs(s.d)):'\u2014'}</td><td class="${cls(s.dd)}">${f(s.dd)}</td></tr>`}).join('');
   el.innerHTML=`<div class="card"><h2>Performance overview</h2><div class="grid">`+
-    stat('Capital deployed','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+
+    stat('Capital deployed','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('Today PNL','\u20b9 '+f(tdP),cls(tdP))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+
     sw(stat('Best day',f(bd.p)+' ('+bd.d+')',cls(bd.p)))+sw(stat('Worst day',f(wd.p)+' ('+wd.d+')',cls(wd.p)))+
     sw(stat('Best stock',f(bs.p)+' ('+esc(bs.name)+')',cls(bs.p)))+sw(stat('Weakest stock',f(ws.p)+' ('+esc(ws.name)+')',cls(ws.p)))+
     sw(stat('Trading days',Y.length+' ('+f(up/Y.length*100)+' % green)'))+stat('Stocks / Trades',St.length+' / '+A.length)+
