@@ -545,7 +545,7 @@ function overview(){
   const dpf=a=>{let k=0;return a.map(v=>{k=Math.max(k,v);return v-k})};
   const rows=St.map((s,i)=>{const r=s.i?s.p/s.i*100:null;return `<tr><td>${i+1}. ${esc(s.name)}</td><td>${s.n}</td><td>${f(s.w/s.n*100)} %</td><td>${s.i?f(s.i):'\u2014'}</td><td class="${cls(s.p)}">${f(s.p)}</td><td class="${r==null?'':cls(r)}">${r==null?'\u2014':f(r)+' %'}</td><td>${f(s.a)}</td><td>${s.tv?f(s.t):'\u2014'}</td><td>${s.tv?f(Math.abs(s.d)):'\u2014'}</td><td class="${cls(s.dd)}">${f(s.dd)}</td></tr>`}).join('');
   el.innerHTML=`<div class="card"><h2>Performance overview</h2><div class="grid">`+
-    stat('Capital deployed','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('Today PNL','\u20b9 '+f(tdP),cls(tdP))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+
+    stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+tdD.split('-').reverse().join('-')+')','\u20b9 '+f(tdP),cls(tdP))+
     sw(stat('Best day',f(bd.p)+' ('+bd.d+')',cls(bd.p)))+sw(stat('Worst day',f(wd.p)+' ('+wd.d+')',cls(wd.p)))+
     sw(stat('Best stock',f(bs.p)+' ('+esc(bs.name)+')',cls(bs.p)))+sw(stat('Weakest stock',f(ws.p)+' ('+esc(ws.name)+')',cls(ws.p)))+
     sw(stat('Trading days',Y.length+' ('+f(up/Y.length*100)+' % green)'))+stat('Stocks / Trades',St.length+' / '+A.length)+
