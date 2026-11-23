@@ -18,7 +18,7 @@ h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 14px;font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
 .card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stat{background:var(--bg);border-radius:10px;padding:10px 12px;min-width:0;overflow:hidden}
 .stat .l{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat.w .v{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;line-height:1.25}
 .stat .v{font-size:clamp(14px,1.2vw + 7px,20px);font-weight:650;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -64,7 +64,8 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 #bpload[hidden]{display:none!important}#ubar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}#ubar button{padding:4px 12px}body.ro .x,body.ro #add,body.ro #upl,body.ro #clr,body.ro #hclr,body.ro #addcard,body.ro #pend{display:none!important}body.ro #app input:disabled,body.ro #app select:disabled{opacity:1;cursor:default}
 /* ---- responsive layout: phones, tablets, laptops, large monitors ---- */
 .rng .dw{flex:1 1 140px;max-width:220px}.rng .dw input{width:100%;min-width:0}.rng .ph{white-space:nowrap;font-size:13px}
-@media(min-width:1800px){:root{--fs:16px}.wrap{padding-left:clamp(24px,3vw,64px);padding-right:clamp(24px,3vw,64px)}.grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}}
+@media(min-width:1800px){:root{--fs:16px}.wrap{padding-left:clamp(24px,3vw,64px);padding-right:clamp(24px,3vw,64px)}}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{gap:12px}.g2 .card{min-width:0}.card{padding:12px}}
 @media(max-width:600px){
 .wrap{padding:14px 10px 32px}
