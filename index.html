@@ -123,11 +123,11 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 
 <div class="card">
 <h2>Daily returns</h2>
-<div class="scroll"><table style="min-width:420px">
-<thead><tr><th>Date</th><th>Trades</th><th>Investment (₹)</th><th>PNL (₹)</th><th>ROI %</th></tr></thead>
+<div class="scroll"><table style="min-width:520px">
+<thead><tr><th>Date</th><th>Trades</th><th>Investment (₹)</th><th>PNL amount (₹)</th><th>TV PNL (₹)</th><th>ROI %</th></tr></thead>
 <tbody id="daily"></tbody>
 </table></div>
-<div class="note">Based on Trade History. PNL is TV PNL. ROI = PNL ÷ investment × 100. Daily investment is the sum of Inv (from the Stocks tab) of that day’s stocks, each counted once.</div>
+<div class="note">Based on Trade History. PNL amount and TV PNL are shown separately. ROI = PNL ÷ investment × 100. Daily investment is the sum of Inv (from the Stocks tab) of that day’s stocks, each counted once.</div>
 </div>
 
 <div class="card">
@@ -318,8 +318,8 @@ function histRender(){
     tot.q+=c.q;tot.p+=c.p;tot.a+=Math.abs(c.act);
     if(c.hasT){tot.tn+=c.tn;tot.t+=Math.abs(c.tpt)}
     if(!tot.seen.has(h.sid||'')){tot.seen.add(h.sid||'');tot.inv+=c.iv}
-    const k=h.date||'No date',d=days[k]=days[k]||{c:0,p:0,i:0,s:new Set()};
-    d.c++;const bp=c.hasT?c.tn:c.p;d.p+=bp;tot.bp=(tot.bp||0)+bp;
+    const k=h.date||'No date',d=days[k]=days[k]||{c:0,p:0,pa:0,tv:0,ht:false,i:0,s:new Set()};
+    d.c++;d.pa+=c.p;if(c.hasT){d.tv+=c.tn;d.ht=true}const bp=c.hasT?c.tn:c.p;d.p+=bp;tot.bp=(tot.bp||0)+bp;
     if(!d.s.has(h.sid||'')){d.s.add(h.sid||'');d.i+=c.iv}
   });
   const pages=Math.max(1,Math.ceil(H.length/PS));if(hp>pages)hp=pages;if(hp<1)hp=1;
@@ -348,8 +348,8 @@ function histRender(){
   const keys=Object.keys(days).sort();
   $('daily').innerHTML=keys.length?keys.map(k=>{
     const d=days[k],r=d.i?d.p/d.i*100:0;
-    return `<tr><td>${k}</td><td>${d.c}</td><td>${d.i?f(d.i):'—'}</td><td class="${cls(d.p)}">${f(d.p)}</td><td class="${cls(r)}">${d.i?f(r)+' %':'—'}</td></tr>`}).join('')
-    :'<tr><td colspan="5" style="text-align:center;color:var(--muted)">No data yet</td></tr>';
+    return `<tr><td>${k}</td><td>${d.c}</td><td>${d.i?f(d.i):'—'}</td><td class="${cls(d.pa)}">${f(d.pa)}</td><td class="${d.ht?cls(d.tv):''}">${d.ht?f(d.tv):'—'}</td><td class="${cls(r)}">${d.i?f(r)+' %':'—'}</td></tr>`}).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--muted)">No data yet</td></tr>';
 }
 $('hpg').addEventListener('click',e=>{
   const v=e.target.dataset.pg;if(!v||e.target.disabled)return;
