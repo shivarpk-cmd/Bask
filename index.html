@@ -18,7 +18,7 @@ h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 14px;font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
 .card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.grid{display:grid;grid-template-rows:repeat(2,auto);grid-auto-flow:column;grid-auto-columns:minmax(125px,1fr);gap:10px;overflow-x:auto;padding-bottom:2px}
+.grid{display:grid;grid-template-columns:repeat(var(--c,6),minmax(125px,1fr));gap:10px;overflow-x:auto;padding-bottom:2px}
 .stat{background:var(--bg);border-radius:10px;padding:10px 12px;min-width:0;overflow:hidden}
 .stat .l{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat.w .v{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;line-height:1.25}
 .stat .v{font-size:clamp(14px,1.2vw + 7px,20px);font-weight:650;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -474,11 +474,12 @@ function renderTabs(){
   rangeInfo();
 }
 $('tabs').onclick=e=>{const t=e.target.dataset.t;if(t)tab(t==='0'?0:t==='1'?1:t==='2'?2:t)};
+function fixGrids(){document.querySelectorAll('.grid').forEach(g=>{const n=[...g.children].filter(c=>c.style.display!=='none').length;g.style.setProperty('--c',Math.max(1,Math.ceil(n/2)))})}
 function tab(t){
   if(window.BP_ROLE!=='admin')t=0;
   cur=t;$('p0').hidden=t!==0;$('p1').hidden=t!==1;$('p2').hidden=t!==2;$('p3').hidden=typeof t!=='string'||t==='admins';$('p4').hidden=t!=='admins';
   if(t===0)overview();else if(t===1)build();else if(t===2)buildM();else if(t==='admins'&&window.BP_ROLE==='admin')adminView();else stockView(t);
-  renderTabs();
+  renderTabs();fixGrids();
 }
 const stat=(l,v,c)=>`<div class="stat"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`;
 const fk=v=>Math.abs(v)>=1000?v.toLocaleString('en-IN',{maximumFractionDigits:0}):String(+v.toFixed(2));
@@ -538,12 +539,13 @@ function overview(){
   const dpf=a=>{let k=0;return a.map(v=>{k=Math.max(k,v);return v-k})};
   const rows=St.map((s,i)=>{const r=s.i?s.p/s.i*100:null;return `<tr><td>${i+1}. ${esc(s.name)}</td><td>${s.n}</td><td>${f(s.w/s.n*100)} %</td><td>${s.i?f(s.i):'\u2014'}</td><td class="${cls(s.p)}">${f(s.p)}</td><td class="${r==null?'':cls(r)}">${r==null?'\u2014':f(r)+' %'}</td><td>${f(s.a)}</td><td>${s.tv?f(s.t):'\u2014'}</td><td>${s.tv?f(Math.abs(s.d)):'\u2014'}</td><td class="${cls(s.dd)}">${f(s.dd)}</td></tr>`}).join('');
   el.innerHTML=`<div class="card"><h2>Performance overview \u2014 ${dk[0]} to ${dk[dk.length-1]}</h2><div class="grid">`+
-    stat('Capital deployed','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('TV PNL',hasTV?'\u20b9 '+f(ttp):'\u2014',hasTV?cls(ttp):'')+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+
-    stat('Stocks / Trades',St.length+' / '+A.length)+stat('Win rate',f(w/A.length*100)+' %')+stat('Profit factor',gl?f(gp/gl):(gp?'\u221e':'\u2014'))+
-    stat('Avg PNL per trade','\u20b9 '+f(tp/A.length),cls(tp))+stat('Max drawdown','\u20b9 '+f(mdd),cls(mdd))+stat('Max drawdown % of capital',tinv?f(mdd/tinv*100)+' %':'\u2014',tinv?cls(mdd):'')+
-    stat('Actual pts',f(ta))+stat('TV pts',hasTV?f(tt):'\u2014')+stat('Diff pts',hasTV?f(Math.abs(tt-ta)):'\u2014')+
-    sw(stat('Trading days',Y.length+' ('+f(up/Y.length*100)+' % green)'))+sw(stat('Best day',f(bd.p)+' ('+bd.d+')',cls(bd.p)))+sw(stat('Worst day',f(wd.p)+' ('+wd.d+')',cls(wd.p)))+
+    stat('Capital deployed','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+
+    sw(stat('Best day',f(bd.p)+' ('+bd.d+')',cls(bd.p)))+sw(stat('Worst day',f(wd.p)+' ('+wd.d+')',cls(wd.p)))+
     sw(stat('Best stock',f(bs.p)+' ('+esc(bs.name)+')',cls(bs.p)))+sw(stat('Weakest stock',f(ws.p)+' ('+esc(ws.name)+')',cls(ws.p)))+
+    sw(stat('Trading days',Y.length+' ('+f(up/Y.length*100)+' % green)'))+stat('Stocks / Trades',St.length+' / '+A.length)+
+    stat('Win rate',f(w/A.length*100)+' %')+stat('Profit factor',gl?f(gp/gl):(gp?'\u221e':'\u2014'))+stat('Avg PNL per trade','\u20b9 '+f(tp/A.length),cls(tp))+
+    stat('Max drawdown','\u20b9 '+f(mdd),cls(mdd))+stat('Max drawdown % of capital',tinv?f(mdd/tinv*100)+' %':'\u2014',tinv?cls(mdd):'')+
+    stat('Actual pts',f(ta))+stat('TV PNL',hasTV?'\u20b9 '+f(ttp):'\u2014',hasTV?cls(ttp):'')+stat('TV pts',hasTV?f(tt):'\u2014')+stat('Diff pts',hasTV?f(Math.abs(tt-ta)):'\u2014')+
     `</div></div><div class="g2">`+
     chart('Cumulative PNL (\u20b9)','line',[{v:Y.map(y=>y.c),c:'var(--accent)'}],ld,'day')+
     chart('Cumulative points (Actual vs TV)','line',[{v:Y.map(y=>y.ca),c:'var(--accent)',name:'Actual'}].concat(hasTV?[{v:Y.map(y=>y.ct),c:'var(--muted)',name:'TV'}]:[]),ld,'day')+
@@ -1110,7 +1112,8 @@ async function start(email,role,uid){
         tb.querySelectorAll('tr').forEach(tr=>{const c=tr.children;if(c.length!==ths.length)return;ix.forEach(i=>hide(c[i]))});
       });
     };
-    new MutationObserver(scrub).observe(root,{childList:true,subtree:true,characterData:true});scrub();
+    const scrubF=()=>{scrub();if(typeof fixGrids==='function')fixGrids()};
+    new MutationObserver(scrubF).observe(root,{childList:true,subtree:true,characterData:true});scrubF();
   }
 }
 async function submit(){
