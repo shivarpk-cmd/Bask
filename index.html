@@ -76,13 +76,12 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <label class="ashow" id="ashl"><input type="checkbox" id="ashow"> Show password</label>
 <div class="aerr" id="aerr" role="alert"></div>
 <button type="button" class="p" id="ago" style="width:100%">Log in</button>
-<div class="note" id="afgw" style="text-align:center"><a href="#" id="afg">Forgot password?</a></div>
+<div class="note" id="afgw" style="text-align:center"><a href="#" id="afg" style="color:var(--text)">Forgot password?</a></div>
 <div class="note"><span style="color:var(--neg)">*</span> Mandatory field. Accounts and data are stored securely in the cloud. Passwords are never visible to the site owner.</div>
 </div>
 </div>
 <div class="wrap">
 <div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>Change password</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
-<p class="sub">Add your stocks once in the Stocks tab, then log trades by picking a stock. Actual points = PNL ÷ Qty. Compare against TradingView points.</p>
 
 <div class="tabs" id="tabs"></div>
 <div class="rng"><span>Date range</span><input type="date" id="rf" aria-label="From date"><span>to</span><input type="date" id="rt" aria-label="To date"><select id="rm" aria-label="Month"><option value="">All months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><select id="ry" aria-label="Year"></select><button id="rr">Reset</button><span id="rl"></span></div>
@@ -105,7 +104,6 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 <div class="bar"><button class="p" id="add">+ Add trade</button><button id="upl">Upload file / image</button><input type="file" id="ufile" hidden accept=".csv,.tsv,.txt,.xlsx,.xls,.xlsm,.ods,.png,.jpg,.jpeg,.webp,.bmp,.gif,image/*"><button id="clr">Clear all</button></div>
 <div id="pend" hidden></div>
 <div class="note" id="umsg"></div>
-<div class="note">Pick a stock, date, + Profit or − Loss, then type the PNL and TV PNL without a minus sign. TV pts = TV PNL ÷ Qty (calculated, not editable). Total PNL and daily returns are based on TV PNL; the ROI column is based on the PNL amount; the PNL amount column is used for Actual pts. Qty and Inv come from the Stocks tab. Actual pts and TV pts show as plain numbers without a minus sign. Diff = Actual − TV for profit trades and TV − Actual for loss trades (when + / − is −), worked out on the plain point values shown in each row, and appears only where TV points are entered. Totals of PNL and points are net (signed) sums. Data is saved in this browser.</div>
 </div>
 
 <div class="card">
@@ -126,7 +124,6 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 </table></div>
 <div class="pg" id="hpg"></div>
 <div class="bar"><button id="hclr">Clear history</button></div>
-<div class="note">Every trade you enter above is recorded here automatically and updated when you edit it. Clear all and ✕ in the Trades table do not remove anything from Trade history; use ✕ on a row or Clear history here to remove entries. Use ✎ to edit an entry manually (edited entries no longer follow changes made in the Trades table). Follows the date range filter. Basket summary, Daily returns, Overview and each stock’s page are all calculated from Trade History.</div>
 </div>
 </div>
 
@@ -982,7 +979,7 @@ view();
 buildM();
 build();
 tab(0);
-if(!VS)fit();
+view();
 </script>
 <script>
 (function(){
