@@ -81,7 +81,7 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 </div>
 </div>
 <div class="wrap">
-<div class="hd"><h1>Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>Change password</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
+<div class="hd"><h1 id="home" role="link" tabindex="0" title="Go to Home (Overview)" style="cursor:pointer">Basket PNL Tracker</h1><div class="rt"><div id="ubar"><span id="syncst"></span><span id="uem"></span><button type="button" id="cpb" hidden>Change password</button><button type="button" id="lgo">Log out</button></div><div class="clk"><b id="ck"></b><span id="cd"></span></div><div class="tools"><div class="tr"><span>Theme</span><select id="th" aria-label="Theme"><option value="light">☀ Light</option><option value="dark">🌙 Dark</option><option value="auto">Auto (device)</option></select></div><div class="tr"><span>Zoom</span><button id="zo" aria-label="Zoom out">−</button><input id="zv" type="number" min="25" max="200" step="1" inputmode="numeric" aria-label="Zoom percent"><button id="zi" aria-label="Zoom in">+</button></div><div class="tr"><span>Font</span><button id="fo" aria-label="Smaller font">A−</button><b id="fv">15px</b><button id="fi" aria-label="Larger font">A+</button></div><div class="tr"><button id="fit">Fit to screen</button><button id="rs">Reset</button></div></div></div></div>
 <p class="sub">Add your stocks once in the Stocks tab, then log trades by picking a stock. Actual points = PNL ÷ Qty. Compare against TradingView points.</p>
 
 <div class="tabs" id="tabs"></div>
@@ -1119,6 +1119,7 @@ async function submit(){
   }catch(e){err.textContent='Something went wrong. Please try again.'}
   finally{$('ago').disabled=false}
 }
+(function(){const h=$('home'),go=()=>{if(!document.body.classList.contains('locked'))tab(0);window.scrollTo({top:0,behavior:'smooth'})};h.onclick=go;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}})();
 $('atl').onclick=()=>setMode('login');
 $('atc').onclick=()=>setMode('create');
 $('afg').onclick=e=>{e.preventDefault();setMode('forgot')};
