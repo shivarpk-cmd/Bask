@@ -18,7 +18,7 @@ h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 14px;font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
 .card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .stat{background:var(--bg);border-radius:10px;padding:10px 12px;min-width:0;overflow:hidden}
 .stat .l{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat.w .v{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;line-height:1.25}
 .stat .v{font-size:clamp(14px,1.2vw + 7px,20px);font-weight:650;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -64,8 +64,7 @@ button.cpy{padding:2px 7px;margin-left:6px;font-size:13px;line-height:1.2;color:
 #bpload[hidden]{display:none!important}#ubar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}#ubar button{padding:4px 12px}body.ro .x,body.ro #add,body.ro #upl,body.ro #clr,body.ro #hclr,body.ro #addcard,body.ro #pend{display:none!important}body.ro #app input:disabled,body.ro #app select:disabled{opacity:1;cursor:default}
 /* ---- responsive layout: phones, tablets, laptops, large monitors ---- */
 .rng .dw{flex:1 1 140px;max-width:220px}.rng .dw input{width:100%;min-width:0}.rng .ph{white-space:nowrap;font-size:13px}
-@media(min-width:1800px){:root{--fs:16px}.wrap{padding-left:clamp(24px,3vw,64px);padding-right:clamp(24px,3vw,64px)}}
-@media(max-width:1000px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1800px){:root{--fs:16px}.wrap{padding-left:clamp(24px,3vw,64px);padding-right:clamp(24px,3vw,64px)}.grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{gap:12px}.g2 .card{min-width:0}.card{padding:12px}}
 @media(max-width:600px){
 .wrap{padding:14px 10px 32px}
@@ -80,33 +79,6 @@ h1{font-size:20px}
 #acm .box,.auth .box{padding:16px}
 }
 @media(max-width:360px){.grid{grid-template-columns:minmax(0,1fr)}}
-/* ---- fit-to-screen tables: on laptops/desktops every column is visible at once, no sideways scrolling ---- */
-@media(min-width:1101px){
-.scroll{overflow-x:visible}
-.scroll table{min-width:0!important;width:100%;font-size:clamp(10px,.8vw,14px)}
-.scroll th{white-space:normal;line-height:1.2;padding:5px 4px}
-.scroll td{white-space:nowrap;padding:5px 4px}
-.scroll td:first-child{white-space:normal;word-break:break-word}
-.scroll td.calc{padding:5px 4px}
-.scroll td input,.scroll td select{min-width:0!important;width:100%!important;max-width:100%;padding:4px 3px;font-size:inherit}
-.scroll td input[type=date]{min-width:0!important}
-.scroll button.x{padding:3px 6px}
-}
-/* Overview: all metrics + charts laid out compactly so they fit one screen on laptops/desktops */
-@media(min-width:1101px){
-#p0{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#p0[hidden]{display:none}
-#p0 .g2{display:contents}
-#p0>.card,#p0>details.card,#p0 .g2>.card{margin:0!important;padding:8px 10px}
-#p0>.card:first-child,#p0>details.card{grid-column:1/-1}
-#p0 .card h2{margin:0 0 6px;font-size:12px}
-#p0 .stat{padding:6px 10px}
-#p0 .stat .v{font-size:clamp(13px,1vw,17px)}
-#p0 .grid{gap:8px}
-#p0 .lg{margin-bottom:2px}
-}
-/* tablets: allow a compact scroll only if really needed */
-@media(max-width:1100px){.scroll table{font-size:13px}.scroll th,.scroll td{padding:5px 5px}}
 </style>
 </head>
 <body class="locked">
@@ -527,25 +499,14 @@ function tab(t){
   if(window.BP_ROLE!=='admin')t=0;
   cur=t;$('p0').hidden=t!==0;$('p1').hidden=t!==1;$('p2').hidden=t!==2;$('p3').hidden=typeof t!=='string'||t==='admins';$('p4').hidden=t!=='admins';
   if(t===0)overview();else if(t===1)build();else if(t===2)buildM();else if(t==='admins'&&window.BP_ROLE==='admin')adminView();else stockView(t);
-  renderTabs();fixGrids();fit();
+  renderTabs();fixGrids();
 }
-// Overview on laptops/desktops: shrink to the window height so everything is visible without scrolling
-function fit(){
-  const a=$('app');a.style.zoom='';
-  if(cur!==0||innerWidth<1101)return;
-  requestAnimationFrame(()=>{
-    const over=document.documentElement.scrollHeight-innerHeight;if(over<=0)return;
-    const h=a.getBoundingClientRect().height;if(!h)return;
-    a.style.zoom=Math.max(.45,(h-over)/h);
-  });
-}
-addEventListener('resize',fit);document.addEventListener('toggle',fit,true);
 const stat=(l,v,c)=>`<div class="stat"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`;
 const fk=v=>Math.abs(v)>=1000?v.toLocaleString('en-IN',{maximumFractionDigits:0}):String(+v.toFixed(2));
 function chart(title,kind,ser,labels,mode){
   if(window.BP_ROLE!=='admin'&&(/ by stock/i.test(title)||/^Cumulative points/i.test(title)))return '';
   if(window.BP_ROLE!=='admin'){ser=ser.filter(x=>x.name!=='TV');title=title.replace(/ ?\(Actual vs TV\)/,'').replace('Actual vs TV points','Actual points')}
-  const W=innerWidth>=1101?760:640,H=innerWidth>=1101?150:230,L=58,R=12,T=14,B=30,N=labels.length,pw=W-L-R;
+  const W=640,H=230,L=58,R=12,T=14,B=30,N=labels.length,pw=W-L-R;
   const all=[0];ser.forEach(s=>s.v.forEach(x=>x!=null&&all.push(x)));
   let lo=Math.min(...all),hi=Math.max(...all);if(lo===hi)hi=lo+1;
   const pd=(hi-lo)*.08;if(lo<0)lo-=pd;if(hi>0)hi+=pd;
@@ -605,7 +566,7 @@ function overview(){
     stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+fdm(tdD)+')','\u20b9 '+f(tdP),cls(tdP))+
     sw(stat('Best day ('+fdm(bd.d)+')','₹ '+f(bd.p),cls(bd.p)))+sw(stat('Worst day ('+fdm(wd.d)+')','₹ '+f(wd.p),cls(wd.p)))+
     sw(stat('Best stock',f(bs.p)+' ('+esc(bs.name)+')',cls(bs.p)))+sw(stat('Weakest stock',f(ws.p)+' ('+esc(ws.name)+')',cls(ws.p)))+
-    stat('Trading days',Y.length)+stat('Stocks / Trades',St.length+' / '+A.length)+
+    sw(stat('Trading days',Y.length+' ('+f(up/Y.length*100)+' % green)'))+stat('Stocks / Trades',St.length+' / '+A.length)+
     stat('Win rate',f(w/A.length*100)+' %')+stat('Profit factor',gl?f(gp/gl):(gp?'\u221e':'\u2014'))+stat('Avg PNL per trade','\u20b9 '+f(tp/A.length),cls(tp))+
     stat('Max drawdown','\u20b9 '+f(mdd),cls(mdd))+stat('Max drawdown % of capital',tinv?f(mdd/tinv*100)+' %':'\u2014',tinv?cls(mdd):'')+
     stat('Actual pts',f(ta))+stat('TV PNL',hasTV?'\u20b9 '+f(ttp):'\u2014',hasTV?cls(ttp):'')+stat('TV pts',hasTV?f(tt):'\u2014')+stat('Diff pts',hasTV?f(Math.abs(tt-ta)):'\u2014')+
@@ -619,7 +580,7 @@ function overview(){
     chart('ROI by stock (%)','bars',[{v:St.map(s=>s.i?s.p/s.i*100:null),c:'pn'}],sn,'cat')+
     chart('PNL by stock (Actual vs TV) (\u20b9)','bars',[{v:St.map(s=>s.pa),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.p:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     chart('Points by stock (Actual vs TV)','bars',[{v:St.map(s=>s.a),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.t:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
-    `</div>`+(window.BP_ROLE!=='admin'?'':`<details class="card" style="margin-top:16px"><summary style="cursor:pointer"><h2 style="display:inline">Stock-wise performance (click to expand)</h2></summary><div class="scroll"><table style="min-width:900px"><thead><tr><th>Stock</th><th>Trades</th><th>Win rate</th><th>Capital (\u20b9)</th><th>PNL (\u20b9)</th><th>ROI %</th><th>Actual pts</th><th>TV pts</th><th>Diff pts</th><th>Max drawdown</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Capital (stock-wise) = the stock\u2019s Inv as set on the Stocks tab, counted once regardless of number of trades. ROI = PNL \u00f7 that capital. Max drawdown is the largest fall of cumulative PNL from its previous peak. Profit factor = gross profit \u00f7 gross loss.</div></details>`);
+    `</div>`+(window.BP_ROLE!=='admin'?'':`<div class="card" style="margin-top:16px"><h2>Stock-wise performance</h2><div class="scroll"><table style="min-width:900px"><thead><tr><th>Stock</th><th>Trades</th><th>Win rate</th><th>Capital (\u20b9)</th><th>PNL (\u20b9)</th><th>ROI %</th><th>Actual pts</th><th>TV pts</th><th>Diff pts</th><th>Max drawdown</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Capital (stock-wise) = the stock\u2019s Inv as set on the Stocks tab, counted once regardless of number of trades. ROI = PNL \u00f7 that capital. Max drawdown is the largest fall of cumulative PNL from its previous peak. Profit factor = gross profit \u00f7 gross loss.</div></div>`);
 }
 async function adminView(){
   const A=window.BPAuth,sb=A.sb,el=$('p4');
