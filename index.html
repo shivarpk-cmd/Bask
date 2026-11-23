@@ -485,7 +485,7 @@ function tab(t){
 const stat=(l,v,c)=>`<div class="stat"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`;
 const fk=v=>Math.abs(v)>=1000?v.toLocaleString('en-IN',{maximumFractionDigits:0}):String(+v.toFixed(2));
 function chart(title,kind,ser,labels,mode){
-  if(window.BP_ROLE!=='admin'&&/ by stock/i.test(title))return '';
+  if(window.BP_ROLE!=='admin'&&(/ by stock/i.test(title)||/^Cumulative points/i.test(title)))return '';
   if(window.BP_ROLE!=='admin'){ser=ser.filter(x=>x.name!=='TV');title=title.replace(/ ?\(Actual vs TV\)/,'').replace('Actual vs TV points','Actual points')}
   const W=640,H=230,L=58,R=12,T=14,B=30,N=labels.length,pw=W-L-R;
   const all=[0];ser.forEach(s=>s.v.forEach(x=>x!=null&&all.push(x)));
@@ -550,11 +550,11 @@ function overview(){
     stat('Actual pts',f(ta))+stat('TV PNL',hasTV?'\u20b9 '+f(ttp):'\u2014',hasTV?cls(ttp):'')+stat('TV pts',hasTV?f(tt):'\u2014')+stat('Diff pts',hasTV?f(Math.abs(tt-ta)):'\u2014')+
     `</div></div><div class="g2">`+
     chart('Cumulative PNL (\u20b9)','line',[{v:Y.map(y=>y.c),c:'var(--accent)'}],ld,'day')+
+    chart('Daily PNL (\u20b9)','bars',[{v:Y.map(y=>y.p),c:'pn'}],ld,'day')+
     chart('Cumulative points (Actual vs TV)','line',[{v:Y.map(y=>y.ca),c:'var(--accent)',name:'Actual'}].concat(hasTV?[{v:Y.map(y=>y.ct),c:'var(--muted)',name:'TV'}]:[]),ld,'day')+
     `</div><div class="g2" style="margin-top:16px">`+
     chart('Drawdown from peak (\u20b9)','line',[{v:Y.map(y=>y.dd),c:'var(--neg)'}],ld,'day')+
     chart('Drawdown from peak (pts)','line',[{v:dpf(Y.map(y=>y.ca)),c:'var(--neg)',name:'Actual'}].concat(hasTV?[{v:dpf(Y.map(y=>y.ct)),c:'var(--muted)',name:'TV'}]:[]),ld,'day')+
-    chart('Daily PNL (\u20b9)','bars',[{v:Y.map(y=>y.p),c:'pn'}],ld,'day')+
     chart('ROI by stock (%)','bars',[{v:St.map(s=>s.i?s.p/s.i*100:null),c:'pn'}],sn,'cat')+
     chart('PNL by stock (Actual vs TV) (\u20b9)','bars',[{v:St.map(s=>s.pa),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.p:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     chart('Points by stock (Actual vs TV)','bars',[{v:St.map(s=>s.a),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.t:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
@@ -1081,6 +1081,7 @@ async function start(email,role,uid){
   $('uem').textContent=window.BP_VISITOR?'Visitor':email+' ('+(role==='admin'?'Admin':'User')+')';
   $('lgo').onclick=async()=>{try{await BPSync.flushNow()}catch(e){}try{localStorage.removeItem(KEY)}catch(e){}try{await sb.auth.signOut()}catch(e){}location.reload()};
   const sc=document.createElement('script');sc.textContent=$('appsrc').textContent;document.body.appendChild(sc);BPSync.after();
+  $('syncst').hidden=role!=='admin';$('uem').hidden=!!window.BP_VISITOR;
   $('cpb').hidden=!!window.BP_VISITOR;$('lgo').hidden=!!window.BP_VISITOR;$('alb').hidden=!window.BP_VISITOR;
   (function(){
     const m=$('acm'),say=(id,t,ok)=>{const e=$(id);e.textContent=t;e.style.color=ok?'var(--pos)':'var(--neg)'};
