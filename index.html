@@ -1184,8 +1184,8 @@ async function submit(){
 (function(){const h=$('home'),go=()=>{if(!document.body.classList.contains('locked'))tab(0);window.scrollTo({top:0,behavior:'smooth'})};h.onclick=go;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}})();
 $('atl').onclick=()=>setMode('login');
 $('atc').onclick=()=>setMode('create');
-$('alb').onclick=()=>{showAuth('login');$('atc').hidden=true;$('abk').hidden=false};
-$('abk').onclick=e=>{e.preventDefault();$('auth').hidden=true;$('atc').hidden=false;$('abk').hidden=true};
+$('alb').onclick=()=>{showAuth('login');$('atc').hidden=true;$('atl').hidden=true;$('abk').hidden=false};
+$('abk').onclick=e=>{e.preventDefault();$('auth').hidden=true;$('atc').hidden=false;$('atl').hidden=false;$('abk').hidden=true};
 $('afg').onclick=e=>{e.preventDefault();setMode('forgot')};
 $('ago').onclick=submit;
 $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
