@@ -485,6 +485,7 @@ function tab(t){
 const stat=(l,v,c)=>`<div class="stat"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`;
 const fk=v=>Math.abs(v)>=1000?v.toLocaleString('en-IN',{maximumFractionDigits:0}):String(+v.toFixed(2));
 function chart(title,kind,ser,labels,mode){
+  if(window.BP_ROLE!=='admin'&&/ by stock/i.test(title))return '';
   if(window.BP_ROLE!=='admin'){ser=ser.filter(x=>x.name!=='TV');title=title.replace(/ ?\(Actual vs TV\)/,'').replace('Actual vs TV points','Actual points')}
   const W=640,H=230,L=58,R=12,T=14,B=30,N=labels.length,pw=W-L-R;
   const all=[0];ser.forEach(s=>s.v.forEach(x=>x!=null&&all.push(x)));
@@ -1125,7 +1126,7 @@ async function start(email,role,uid){
     new MutationObserver(fix).observe(root,{childList:true,subtree:true});fix();
     const hide=el=>{if(el.style.display!=='none')el.style.display='none'};
     const scrub=()=>{
-      root.querySelectorAll('.stat').forEach(t=>{const l=t.querySelector('.l');if(l&&/\b(TV|Diff)\b/i.test(l.textContent.trim()))hide(t)});
+      root.querySelectorAll('.stat').forEach(t=>{const l=t.querySelector('.l');if(l&&/\b(TV|Diff)\b|^(Best stock|Weakest stock|Stocks \/ Trades|Actual pts)$/i.test(l.textContent.trim()))hide(t)});
       root.querySelectorAll('table').forEach(tb=>{
         const ths=[...tb.querySelectorAll('thead th')],ix=[];
         ths.forEach((th,i)=>{const t=th.textContent.trim();if(/\b(TV|Diff)\b/i.test(t)||(t==='+ / −'&&ths[i-1]&&/^Actual pts/.test(ths[i-1].textContent.trim())))ix.push(i)});
