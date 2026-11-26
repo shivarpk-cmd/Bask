@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Basket PNL Tracker</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--text:#14181f;--muted:#667085;--line:#e3e6eb;--accent:#2f6fed;--pos:#0a8a4a;--neg:#d92d20;--inp:#fff;
+:root{--bg:#f6f7f9;--card:#fff;--text:#14181f;--muted:#667085;--line:#e3e6eb;--accent:#7cc4fa;--pos:#0a8a4a;--neg:#d92d20;--inp:#fff;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--card:#181c25;--text:#e8ebf0;--muted:#8d96a6;--line:#2a2f3b;--accent:#6b9bff;--pos:#3ddc84;--neg:#ff6b60;--inp:#10131a}}
-:root[data-theme="dark"]{--bg:#0f1218;--card:#181c25;--text:#e8ebf0;--muted:#8d96a6;--line:#2a2f3b;--accent:#6b9bff;--pos:#3ddc84;--neg:#ff6b60;--inp:#10131a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--card:#181c25;--text:#e8ebf0;--muted:#8d96a6;--line:#2a2f3b;--accent:#7cc4fa;--pos:#3ddc84;--neg:#ff6b60;--inp:#10131a}}
+:root[data-theme="dark"]{--bg:#0f1218;--card:#181c25;--text:#e8ebf0;--muted:#8d96a6;--line:#2a2f3b;--accent:#7cc4fa;--pos:#3ddc84;--neg:#ff6b60;--inp:#10131a}
 :root[data-theme="light"]{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -82,6 +82,54 @@ h1{font-size:20px}
 @media(max-width:360px){.grid{grid-template-columns:minmax(0,1fr)}}
 #p0 .g2{align-items:stretch}#p0 .g2 .card{margin-bottom:0;min-width:0}
 .dr{max-height:420px;overflow:auto}.dr table{min-width:0}.dr thead th{position:sticky;top:0;background:var(--card);z-index:1}
+
+/* plain Overview tables */
+.dr{border:1px solid var(--line);border-radius:6px}
+.dt th:nth-child(2),.dt td:nth-child(2){text-align:center}
+.dt th,.dt td{padding:8px 12px}
+.dt tfoot td{position:sticky;bottom:0;background:var(--card);font-weight:700;border-top:1px solid var(--line)}
+.dt .pill.zero{color:var(--muted)}
+.auth,#bpload,#syncst,#cpb,#lgo,#alb,#uem{display:none!important}
+#vsw{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2000;display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:12px;align-items:center}#vsw button{padding:4px 12px;border-radius:999px}#vsw button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+/* simple look */
+.card,.stat,.pbar,.auth .box,#acm .box{border-radius:6px;box-shadow:none}
+input,select,button,.tabs button,#vsw,#vsw button{border-radius:4px}
+.card h2{text-transform:none;letter-spacing:0;color:var(--text);font-weight:600}
+.stat{background:none;border:1px solid var(--line)}
+.stat .v{font-weight:600}
+#tip,#vsw{box-shadow:none}
+/* light animations */
+@media (prefers-reduced-motion:no-preference){
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes wipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+body.anim .card{animation:rise .45s ease backwards}
+body.anim .card:nth-of-type(2){animation-delay:.1s}
+body.anim .stat{animation:rise .4s ease backwards}
+body.anim .stat:nth-child(2n){animation-delay:.08s}
+body.anim .stat:nth-child(3n){animation-delay:.16s}
+body.anim tbody tr{animation:fade .6s ease backwards}
+body.anim svg polyline{animation:wipe 1s ease backwards}
+.stat{transition:transform .2s,border-color .2s}
+.stat:hover{transform:translateY(-2px);border-color:var(--muted)}
+button{transition:background-color .2s,color .2s,transform .1s}
+button:active{transform:scale(.97)}
+}
+/* accents and hover highlight */
+:root{--hl:#7cc4fa}
+.card{border-top:3px solid var(--hl)}
+.card h2{border-left:4px solid var(--hl);padding-left:10px}
+.stat{border-left:3px solid var(--hl);background:color-mix(in srgb,var(--hl) 4%,transparent)}
+.card,.stat,.tabs button,tbody td,svg polyline,svg rect,svg circle{transition:background-color .2s,border-color .2s,box-shadow .2s,transform .2s,filter .2s,stroke-width .2s}
+.card:hover{border-color:color-mix(in srgb,var(--hl) 55%,var(--line));border-top-color:var(--hl);box-shadow:0 4px 16px color-mix(in srgb,var(--hl) 14%,transparent)}
+.stat:hover{transform:translateY(-3px);border-color:var(--hl);background:color-mix(in srgb,var(--hl) 13%,transparent);box-shadow:0 6px 14px color-mix(in srgb,var(--hl) 22%,transparent)}
+tbody tr:hover td{background:color-mix(in srgb,var(--hl) 13%,transparent)}
+tbody tr:hover td:first-child{box-shadow:inset 4px 0 0 var(--hl)}
+.tabs button:hover{border-color:var(--hl);box-shadow:0 3px 10px color-mix(in srgb,var(--hl) 28%,transparent);transform:translateY(-2px)}
+input:hover,select:hover,button:hover{border-color:var(--hl)}
+svg polyline:hover{stroke-width:4px!important}
+svg rect:hover,svg circle:hover{filter:brightness(1.2)}
+.on,.tabs button.on,#vsw button.on{color:#0b2a42}
 </style>
 </head>
 <body class="locked">
@@ -192,13 +240,12 @@ h1{font-size:20px}
 
 <div id="tip"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script>window.__SEED={"rows": [], "master": [{"id": "m0", "name": "RELIANCE", "qty": "100", "inv": "30000", "ltp": "100"}, {"id": "m1", "name": "TCS", "qty": "50", "inv": "30000", "ltp": "100"}, {"id": "m2", "name": "INFY", "qty": "120", "inv": "30000", "ltp": "100"}, {"id": "m3", "name": "HDFCBANK", "qty": "90", "inv": "30000", "ltp": "100"}, {"id": "m4", "name": "SBIN", "qty": "300", "inv": "30000", "ltp": "100"}, {"id": "m5", "name": "ITC", "qty": "250", "inv": "30000", "ltp": "100"}, {"id": "m6", "name": "LT", "qty": "40", "inv": "30000", "ltp": "100"}, {"id": "m7", "name": "TATASTEEL", "qty": "400", "inv": "30000", "ltp": "100"}], "hist": [{"id": "h1", "sid": "m5", "side": "BUY", "date": "2026-11-17", "qty": "250", "sign": "-", "pnl": "2038.12", "tsign": "-", "tvp": "2288.63"}, {"id": "h2", "sid": "m3", "side": "BUY", "date": "2026-11-17", "qty": "90", "sign": "-", "pnl": "870.01", "tsign": "-", "tvp": "761.94"}, {"id": "h3", "sid": "m6", "side": "BUY", "date": "2026-11-17", "qty": "40", "sign": "-", "pnl": "1194.87", "tsign": "-", "tvp": "1101.91"}, {"id": "h4", "sid": "m6", "side": "BUY", "date": "2026-11-18", "qty": "40", "sign": "+", "pnl": "685.97", "tsign": "+", "tvp": "783.98"}, {"id": "h5", "sid": "m0", "side": "BUY", "date": "2026-11-18", "qty": "100", "sign": "+", "pnl": "349.45", "tsign": "+", "tvp": "327.39"}, {"id": "h6", "sid": "m2", "side": "BUY", "date": "2026-11-18", "qty": "120", "sign": "-", "pnl": "330.46", "tsign": "-", "tvp": "337.49"}, {"id": "h7", "sid": "m2", "side": "BUY", "date": "2026-11-18", "qty": "120", "sign": "+", "pnl": "1057.04", "tsign": "+", "tvp": "1082.92"}, {"id": "h8", "sid": "m6", "side": "SELL", "date": "2026-11-19", "qty": "40", "sign": "-", "pnl": "801.93", "tsign": "-", "tvp": "793.65"}, {"id": "h9", "sid": "m7", "side": "SELL", "date": "2026-11-19", "qty": "400", "sign": "-", "pnl": "535.96", "tsign": "-", "tvp": "503.76"}, {"id": "h10", "sid": "m2", "side": "BUY", "date": "2026-11-19", "qty": "120", "sign": "+", "pnl": "316.37", "tsign": "+", "tvp": "276.68"}, {"id": "h11", "sid": "m4", "side": "SELL", "date": "2026-11-19", "qty": "300", "sign": "+", "pnl": "993.52", "tsign": "+", "tvp": "1105.33"}, {"id": "h12", "sid": "m5", "side": "BUY", "date": "2026-11-20", "qty": "250", "sign": "+", "pnl": "1154.04", "tsign": "+", "tvp": "1304.04"}, {"id": "h13", "sid": "m6", "side": "BUY", "date": "2026-11-20", "qty": "40", "sign": "+", "pnl": "929.12", "tsign": "+", "tvp": "1057.9"}, {"id": "h14", "sid": "m1", "side": "SELL", "date": "2026-11-20", "qty": "50", "sign": "+", "pnl": "3110.84", "tsign": "+", "tvp": "2961.63"}, {"id": "h15", "sid": "m4", "side": "SELL", "date": "2026-11-23", "qty": "300", "sign": "+", "pnl": "417.71", "tsign": "+", "tvp": "442.4"}, {"id": "h16", "sid": "m1", "side": "BUY", "date": "2026-11-23", "qty": "50", "sign": "+", "pnl": "718.3", "tsign": "+", "tvp": "768.11"}, {"id": "h17", "sid": "m4", "side": "SELL", "date": "2026-11-23", "qty": "300", "sign": "+", "pnl": "3481.99", "tsign": "+", "tvp": "3256.98"}, {"id": "h18", "sid": "m7", "side": "SELL", "date": "2026-11-25", "qty": "400", "sign": "+", "pnl": "848.17", "tsign": "+", "tvp": "860.75"}, {"id": "h19", "sid": "m2", "side": "SELL", "date": "2026-11-25", "qty": "120", "sign": "-", "pnl": "158.13", "tsign": "-", "tvp": "175.4"}, {"id": "h20", "sid": "m4", "side": "SELL", "date": "2026-11-25", "qty": "300", "sign": "-", "pnl": "273.48", "tsign": "-", "tvp": "313.39"}, {"id": "h21", "sid": "m6", "side": "BUY", "date": "2026-11-25", "qty": "40", "sign": "+", "pnl": "207.62", "tsign": "+", "tvp": "185.88"}, {"id": "h22", "sid": "m2", "side": "BUY", "date": "2026-11-25", "qty": "120", "sign": "+", "pnl": "923.29", "tsign": "+", "tvp": "849.05"}, {"id": "h23", "sid": "m3", "side": "BUY", "date": "2026-11-25", "qty": "90", "sign": "-", "pnl": "526.11", "tsign": "-", "tvp": "523.74"}, {"id": "h24", "sid": "m2", "side": "SELL", "date": "2026-11-25", "qty": "120", "sign": "+", "pnl": "1120.64", "tsign": "+", "tvp": "1047.33"}, {"id": "h25", "sid": "m6", "side": "BUY", "date": "2026-11-26", "qty": "40", "sign": "+", "pnl": "461.22", "tsign": "+", "tvp": "418.41"}, {"id": "h26", "sid": "m3", "side": "SELL", "date": "2026-11-26", "qty": "90", "sign": "+", "pnl": "1644.86", "tsign": "+", "tvp": "1478.22"}, {"id": "h27", "sid": "m5", "side": "BUY", "date": "2026-11-26", "qty": "250", "sign": "+", "pnl": "1875.17", "tsign": "+", "tvp": "1651.49"}, {"id": "h28", "sid": "m2", "side": "BUY", "date": "2026-11-26", "qty": "120", "sign": "+", "pnl": "1058.98", "tsign": "+", "tvp": "1201.61"}, {"id": "h29", "sid": "m0", "side": "BUY", "date": "2026-11-26", "qty": "100", "sign": "+", "pnl": "623.23", "tsign": "+", "tvp": "693.22"}, {"id": "h30", "sid": "m6", "side": "BUY", "date": "2026-11-26", "qty": "40", "sign": "+", "pnl": "1159.06", "tsign": "+", "tvp": "1205.8"}, {"id": "h31", "sid": "m5", "side": "SELL", "date": "2026-11-26", "qty": "250", "sign": "+", "pnl": "1254.42", "tsign": "+", "tvp": "1244.69"}, {"id": "h32", "sid": "m1", "side": "SELL", "date": "2026-11-26", "qty": "50", "sign": "+", "pnl": "1079.35", "tsign": "+", "tvp": "1239.02"}, {"id": "h33", "sid": "m7", "side": "SELL", "date": "2026-11-26", "qty": "400", "sign": "-", "pnl": "219.43", "tsign": "-", "tvp": "218.37"}]};</script>
 <script type="text/plain" id="appsrc">
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 let S={rows:[],master:null};
-try{const x=JSON.parse(localStorage.getItem(window.BP_KEY||'basketpnl')||'null');if(x&&Array.isArray(x.rows))S=x}catch(e){}
+S=JSON.parse(JSON.stringify(window.__SEED));
 const uid=()=>Math.random().toString(36).slice(2,9);
 S.rows.forEach(r=>{if(!r.sign){const v=parseFloat(r.pnl);r.sign=v<0?'-':'+';if(!isNaN(v))r.pnl=String(Math.abs(v))}});
 if(!Array.isArray(S.master)){
@@ -521,7 +568,7 @@ function chart(title,kind,ser,labels,mode){
   ser.forEach((se,j)=>{
     if(kind==='line'){
       const pts=se.v.map((v,i)=>`${x(i)},${y(v)}`);
-      if(N>1){s+=`<polygon points="${x(0)},${y(0)} ${pts.join(' ')} ${x(N-1)},${y(0)}" style="fill:${se.c};opacity:.15"/>`;s+=`<polyline points="${pts.join(' ')}" style="fill:none;stroke:${se.c};stroke-width:2"/>`}
+      if(N>1){s+=`<polyline points="${pts.join(' ')}" style="fill:none;stroke:${se.c};stroke-width:2"/>`}
       se.v.forEach((v,i)=>{s+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" style="fill:${se.c}"/>`});
     }else{
       const gw=pw/N*.8,bw=gw/ser.length;
@@ -565,8 +612,9 @@ function overview(){
   const up=Y.filter(y=>y.p>0).length,ld=Y.map(y=>y.d),sn=St.map(s=>s.name);
   const dpf=a=>{let k=0;return a.map(v=>{k=Math.max(k,v);return v-k})};
   const rows=St.map((s,i)=>{const r=s.i?s.p/s.i*100:null;return `<tr><td>${i+1}. ${esc(s.name)}</td><td>${s.n}</td><td>${f(s.w/s.n*100)} %</td><td>${s.i?f(s.i):'\u2014'}</td><td class="${cls(s.p)}">${f(s.p)}</td><td class="${r==null?'':cls(r)}">${r==null?'\u2014':f(r)+' %'}</td><td>${f(s.a)}</td><td>${s.tv?f(s.t):'\u2014'}</td><td>${s.tv?f(Math.abs(s.d)):'\u2014'}</td><td class="${cls(s.dd)}">${f(s.dd)}</td></tr>`}).join('');
-  const dRows=Y.slice().reverse().map(y=>`<tr><td>${esc(y.d)}</td><td>${y.n}</td><td class="${cls(y.pa)}">${f(y.pa)}</td></tr>`).join('');
-  const dailyCard=`<div class="card" style="margin-top:16px"><h2>Daily returns</h2><div class="scroll dr"><table style="min-width:360px"><thead><tr><th>Date</th><th>Trades</th><th>PNL amount (\u20b9)</th></tr></thead><tbody>${dRows}</tbody></table></div></div>`;
+  const dRows=Y.slice().reverse().map(y=>`<tr><td class="dd">${esc(y.d)}</td><td class="dn"><span class="chip">${y.n}</span></td><td class="dp"><span class="pill ${cls(y.pa)||'zero'}">${f(y.pa)}</span></td></tr>`).join('');
+  const dTotN=Y.reduce((a,y)=>a+y.n,0),dTotP=Y.reduce((a,y)=>a+y.pa,0);
+  const dailyCard=`<div class="card dcard" style="margin-top:16px"><h2>Daily returns</h2><div class="scroll dr"><table class="dt" style="min-width:360px"><thead><tr><th>Date</th><th>Trades</th><th>PNL amount (\u20b9)</th></tr></thead><tbody>${dRows}</tbody><tfoot><tr><td class="dd">Total</td><td class="dn"><span class="chip">${dTotN}</span></td><td class="dp"><span class="pill ${cls(dTotP)||'zero'}">${f(dTotP)}</span></td></tr></tfoot></table></div></div>`;
   el.innerHTML=`<div class="card"><h2>Performance overview</h2><div class="grid">`+
     stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+fdm(tdD)+')','\u20b9 '+f(tdP),cls(tdP))+
     sw(stat('Best day ('+fdm(bd.d)+')','₹ '+f(bd.p),cls(bd.p)))+sw(stat('Worst day ('+fdm(wd.d)+')','₹ '+f(wd.p),cls(wd.p)))+
@@ -1100,8 +1148,8 @@ async function start(email,role,uid){
   window.BP_ROLE=role;window.BP_EMAIL=email;window.BP_KEY=KEY;window.BPAuth={sb:sb,uid:uid};
   if(role==='user')document.body.classList.add('ro');
   const ld=$('bpload');if(ld)ld.hidden=false;
-  try{await Promise.race([BPSync.pull(role,uid),new Promise(r=>setTimeout(r,10000))])}catch(e){}
-  BPSync.fail();
+  
+  
   if(ld)ld.hidden=true;
   $('auth').hidden=true;document.body.classList.remove('locked');
   $('uem').textContent=window.BP_VISITOR?'Visitor':email+' ('+(role==='admin'?'Admin':'User')+')';
@@ -1220,19 +1268,13 @@ $('aph').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/
 $('ashow').onchange=e=>{const t=e.target.checked?'text':'password';$('apw').type=t;$('apc').type=t};
 ['aem','aph','apw','apc'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit()}}));
 
-if(!configured){showAuth('login');$('aerr').textContent='Setup incomplete: add your Supabase URL and key at the top of the page script (see SETUP.md).'}
-else if(recovery){
-  showAuth('reset');
-  sb.auth.getSession().then(r=>{const u=r.data&&r.data.session&&r.data.session.user;if(u)$('aem').value=u.email});
-}else{
-  sb.auth.getSession().then(async r=>{
-    if(r.data&&r.data.session){enter(r.data.session.user);return}
-    if(await loginRequired()){showAuth('login');return}
-    window.BP_VISITOR=true;started=true;start('','user',null);
-  }).catch(()=>showAuth('login'));
-}
+{const r=(location.hash==='#user')?'user':'admin';start(r==='admin'?'admin@demo.com':'',r,null)}
 })();
 </script>
 
+<div id="vsw"><button id="vA" onclick="location.hash='#admin';location.reload()">Admin</button><button id="vU" onclick="location.hash='#user';location.reload()">User</button></div><script>document.getElementById(location.hash==='#user'?'vU':'vA').className='on'</script><script>
+(function(){var t;function play(){var b=document.body;b.classList.remove('anim');void b.offsetWidth;b.classList.add('anim');clearTimeout(t);t=setTimeout(function(){b.classList.remove('anim')},1300)}
+play();document.addEventListener('click',function(e){if(e.target.closest('.tabs button'))setTimeout(play,0)},true)})();
+</script>
 </body>
 </html>
