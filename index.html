@@ -80,6 +80,8 @@ h1{font-size:20px}
 #acm .box,.auth .box{padding:16px}
 }
 @media(max-width:360px){.grid{grid-template-columns:minmax(0,1fr)}}
+#p0 .g2{align-items:stretch}#p0 .g2 .card{margin-bottom:0;min-width:0}
+.dr{max-height:420px;overflow:auto}.dr table{min-width:0}.dr thead th{position:sticky;top:0;background:var(--card);z-index:1}
 </style>
 </head>
 <body class="locked">
@@ -550,19 +552,21 @@ function overview(){
     if(pn>0){s.w++;w++;gp+=pn}else if(pn<0){s.l++;l++;gl-=pn}
     s.cum+=pn;s.pk=Math.max(s.pk,s.cum);s.dd=Math.min(s.dd,s.cum-s.pk);
     tp+=pn;tpa+=p;ta+=Math.abs(act);
-    const d=r.date||'No date',y=D[d]=D[d]||{p:0,a:0,t:0,u:0};y.p+=pn;y.a+=act;if(tv!=null){y.t+=tv;y.u+=tvp}
+    const d=r.date||'No date',y=D[d]=D[d]||{p:0,a:0,t:0,u:0,n:0,pa:0};y.n++;y.pa+=p;y.p+=pn;y.a+=act;if(tv!=null){y.t+=tv;y.u+=tvp}
   });
   tinv=[...X.values()].reduce((a,s)=>a+s.i,0);
   // Today PNL = actual PNL amount (sign x |PNL|) of all trades dated today (device date), regardless of the date-range filter
   const fdm=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)?d.split('-').reverse().join('-'):d;
   const tdD=today(),tdP=S.hist.reduce((a,h)=>(h.date||'')===tdD?a+(h.sign==='-'?-1:1)*Math.abs(n(h.pnl)):a,0);
   const dk=Object.keys(D).sort();let c=0,pk=0,mdd=0,ca=0,ct=0,cu=0;
-  const Y=dk.map(k=>{const y=D[k];c+=y.p;pk=Math.max(pk,c);mdd=Math.min(mdd,c-pk);ca+=y.a;ct+=y.t;cu+=y.u;return{d:k,p:y.p,c,dd:c-pk,ca,ct,cu}});
+  const Y=dk.map(k=>{const y=D[k];c+=y.p;pk=Math.max(pk,c);mdd=Math.min(mdd,c-pk);ca+=y.a;ct+=y.t;cu+=y.u;return{d:k,p:y.p,c,dd:c-pk,ca,ct,cu,n:y.n,pa:y.pa}});
   const St=[...X.values()].sort((a,b)=>b.p-a.p),sgn=v=>(v>0?'+':'')+f(v);
   const roi=tinv?tpa/tinv*100:null,bd=Y.reduce((a,b)=>b.p>a.p?b:a),wd=Y.reduce((a,b)=>b.p<a.p?b:a),bs=St[0],ws=St[St.length-1];
   const up=Y.filter(y=>y.p>0).length,ld=Y.map(y=>y.d),sn=St.map(s=>s.name);
   const dpf=a=>{let k=0;return a.map(v=>{k=Math.max(k,v);return v-k})};
   const rows=St.map((s,i)=>{const r=s.i?s.p/s.i*100:null;return `<tr><td>${i+1}. ${esc(s.name)}</td><td>${s.n}</td><td>${f(s.w/s.n*100)} %</td><td>${s.i?f(s.i):'\u2014'}</td><td class="${cls(s.p)}">${f(s.p)}</td><td class="${r==null?'':cls(r)}">${r==null?'\u2014':f(r)+' %'}</td><td>${f(s.a)}</td><td>${s.tv?f(s.t):'\u2014'}</td><td>${s.tv?f(Math.abs(s.d)):'\u2014'}</td><td class="${cls(s.dd)}">${f(s.dd)}</td></tr>`}).join('');
+  const dRows=Y.slice().reverse().map(y=>`<tr><td>${esc(y.d)}</td><td>${y.n}</td><td class="${cls(y.pa)}">${f(y.pa)}</td></tr>`).join('');
+  const dailyCard=`<div class="card" style="margin-top:16px"><h2>Daily returns</h2><div class="scroll dr"><table style="min-width:360px"><thead><tr><th>Date</th><th>Trades</th><th>PNL amount (\u20b9)</th></tr></thead><tbody>${dRows}</tbody></table></div></div>`;
   el.innerHTML=`<div class="card"><h2>Performance overview</h2><div class="grid">`+
     stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+fdm(tdD)+')','\u20b9 '+f(tdP),cls(tdP))+
     sw(stat('Best day ('+fdm(bd.d)+')','₹ '+f(bd.p),cls(bd.p)))+sw(stat('Worst day ('+fdm(wd.d)+')','₹ '+f(wd.p),cls(wd.p)))+
@@ -571,16 +575,15 @@ function overview(){
     stat('Win rate',f(w/A.length*100)+' %')+stat('Profit factor',gl?f(gp/gl):(gp?'\u221e':'\u2014'))+stat('Avg PNL per trade','\u20b9 '+f(tp/A.length),cls(tp))+
     stat('Max drawdown','\u20b9 '+f(mdd),cls(mdd))+stat('Max drawdown % of capital',tinv?f(mdd/tinv*100)+' %':'\u2014',tinv?cls(mdd):'')+
     stat('Actual pts',f(ta))+stat('TV PNL',hasTV?'\u20b9 '+f(ttp):'\u2014',hasTV?cls(ttp):'')+stat('TV pts',hasTV?f(tt):'\u2014')+stat('Diff pts',hasTV?f(Math.abs(tt-ta)):'\u2014')+
-    `</div></div><div class="g2">`+
+    `</div></div>`+dailyCard+`<div class="g2" style="margin-top:16px">`+
     chart('Cumulative PNL (\u20b9)','line',[{v:Y.map(y=>y.c),c:'var(--accent)'}],ld,'day')+
     chart('Daily PNL (\u20b9)','bars',[{v:Y.map(y=>y.p),c:'pn'}],ld,'day')+
-    chart('Cumulative points (Actual vs TV)','line',[{v:Y.map(y=>y.ca),c:'var(--accent)',name:'Actual'}].concat(hasTV?[{v:Y.map(y=>y.ct),c:'var(--muted)',name:'TV'}]:[]),ld,'day')+
-    `</div><div class="g2" style="margin-top:16px">`+
     chart('Drawdown from peak (\u20b9)','line',[{v:Y.map(y=>y.dd),c:'var(--neg)'}],ld,'day')+
     chart('Drawdown from peak (pts)','line',[{v:dpf(Y.map(y=>y.ca)),c:'var(--neg)',name:'Actual'}].concat(hasTV?[{v:dpf(Y.map(y=>y.ct)),c:'var(--muted)',name:'TV'}]:[]),ld,'day')+
+    chart('Cumulative points (Actual vs TV)','line',[{v:Y.map(y=>y.ca),c:'var(--accent)',name:'Actual'}].concat(hasTV?[{v:Y.map(y=>y.ct),c:'var(--muted)',name:'TV'}]:[]),ld,'day')+
+    chart('Points by stock (Actual vs TV)','bars',[{v:St.map(s=>s.a),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.t:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     chart('ROI by stock (%)','bars',[{v:St.map(s=>s.i?s.p/s.i*100:null),c:'pn'}],sn,'cat')+
     chart('PNL by stock (Actual vs TV) (\u20b9)','bars',[{v:St.map(s=>s.pa),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.p:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
-    chart('Points by stock (Actual vs TV)','bars',[{v:St.map(s=>s.a),c:'var(--accent)',name:'Actual'},{v:St.map(s=>s.tv?s.t:null),c:'var(--muted)',name:'TV'}],sn,'cat')+
     `</div>`+(window.BP_ROLE!=='admin'?'':`<div class="card" style="margin-top:16px"><h2>Stock-wise performance</h2><div class="scroll"><table style="min-width:900px"><thead><tr><th>Stock</th><th>Trades</th><th>Win rate</th><th>Capital (\u20b9)</th><th>PNL (\u20b9)</th><th>ROI %</th><th>Actual pts</th><th>TV pts</th><th>Diff pts</th><th>Max drawdown</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">Capital (stock-wise) = the stock\u2019s Inv as set on the Stocks tab, counted once regardless of number of trades. ROI = PNL \u00f7 that capital. Max drawdown is the largest fall of cumulative PNL from its previous peak. Profit factor = gross profit \u00f7 gross loss.</div></div>`);
 }
 async function adminView(){
