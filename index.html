@@ -81,6 +81,15 @@ h1{font-size:20px}
 }
 @media(max-width:360px){.grid{grid-template-columns:minmax(0,1fr)}}
 #p0 .g2{align-items:stretch}#p0 .g2 .card{margin-bottom:0;min-width:0}
+/* ---- stat box hover animation + Net PNL highlight ---- */
+.stat{transition:transform .2s ease,box-shadow .2s ease,background .2s ease,outline-color .2s ease;outline:1px solid transparent;position:relative}
+.stat:hover{transform:translateY(-4px) scale(1.04);box-shadow:0 8px 20px rgba(0,0,0,.18);background:var(--card);outline-color:var(--accent);z-index:2}
+.stat.hl{background:color-mix(in srgb,var(--accent) 14%,var(--card));outline:2px solid var(--accent);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent);animation:hlpulse 2.4s ease-in-out infinite}
+.stat.hl .l{color:var(--accent);font-weight:700}
+.stat.hl .v{font-size:clamp(16px,1.3vw + 8px,23px)}
+.stat.hl:hover{animation-play-state:paused;box-shadow:0 10px 26px color-mix(in srgb,var(--accent) 45%,transparent)}
+@keyframes hlpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 50%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 0%,transparent)}}
+@media(prefers-reduced-motion:reduce){.stat,.stat.hl{transition:none;animation:none}.stat:hover{transform:none}}
 .dr{max-height:420px;overflow:auto}.dr table{min-width:0}.dr thead th{position:sticky;top:0;background:var(--card);z-index:1}
 </style>
 </head>
@@ -568,7 +577,7 @@ function overview(){
   const dRows=Y.slice().reverse().map(y=>`<tr><td>${esc(y.d)}</td><td>${y.n}</td><td class="${cls(y.pa)}">${f(y.pa)}</td></tr>`).join('');
   const dailyCard=`<div class="card" style="margin-top:16px"><h2>Daily returns</h2><div class="scroll dr"><table style="min-width:360px"><thead><tr><th>Date</th><th>Trades</th><th>PNL amount (\u20b9)</th></tr></thead><tbody>${dRows}</tbody></table></div></div>`;
   el.innerHTML=`<div class="card"><h2>Performance overview</h2><div class="grid">`+
-    stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa))+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+fdm(tdD)+')','\u20b9 '+f(tdP),cls(tdP))+
+    stat('Capital','\u20b9 '+f(tinv))+stat('Net PNL','\u20b9 '+f(tpa),cls(tpa)).replace('class="stat"','class="stat hl"')+stat('ROI',roi==null?'\u2014':f(roi)+' %',roi==null?'':cls(roi))+stat('Today PNL ('+fdm(tdD)+')','\u20b9 '+f(tdP),cls(tdP))+
     sw(stat('Best day ('+fdm(bd.d)+')','₹ '+f(bd.p),cls(bd.p)))+sw(stat('Worst day ('+fdm(wd.d)+')','₹ '+f(wd.p),cls(wd.p)))+
     sw(stat('Best stock',f(bs.p)+' ('+esc(bs.name)+')',cls(bs.p)))+sw(stat('Weakest stock',f(ws.p)+' ('+esc(ws.name)+')',cls(ws.p)))+
     stat('Trading days',Y.length)+stat('Stocks / Trades',St.length+' / '+A.length)+
